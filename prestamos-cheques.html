@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Acreditaciones · Préstamos con Cheques Diferidos</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0f0f0f;
+    --surface: #171717;
+    --surface2: #1e1e1e;
+    --surface3: #252525;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.12);
+    --text: #f0ede8;
+    --text2: #8a8680;
+    --text3: #5a5752;
+    --accent: #c8f03c;
+    --accent2: #a8cc28;
+    --accent-dim: rgba(200,240,60,0.10);
+    --accent-dim2: rgba(200,240,60,0.06);
+    --green: #4ade80;
+    --green-dim: rgba(74,222,128,0.10);
+    --amber: #fbbf24;
+    --amber-dim: rgba(251,191,36,0.10);
+    --red: #f87171;
+    --red-dim: rgba(248,113,113,0.10);
+    --blue: #60a5fa;
+    --blue-dim: rgba(96,165,250,0.10);
+    --radius: 8px;
+    --radius-lg: 14px;
+    --mono: 'DM Mono', monospace;
+    --sans: 'DM Sans', sans-serif;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 14px;
+    line-height: 1.6;
+    min-height: 100vh;
+    padding: 2rem 1rem 4rem;
+  }
+
+  .app-header {
+    max-width: 960px;
+    margin: 0 auto 2.5rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .header-badge {
+    background: var(--accent-dim);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    padding: 3px 8px;
+    border-radius: 4px;
+    white-space: nowrap;
+    margin-top: 5px;
+  }
+  .header-text h1 {
+    font-size: 22px;
+    font-weight: 400;
+    letter-spacing: -0.02em;
+    color: var(--text);
+    margin-bottom: 2px;
+  }
+  .header-text p { font-size: 13px; color: var(--text2); }
+
+  .app-body { max-width: 960px; margin: 0 auto; display: flex; flex-direction: column; gap: 1.5rem; }
+
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+  .panel-header {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  .panel-title { font-size: 12px; font-family: var(--mono); color: var(--text2); letter-spacing: 0.08em; text-transform: uppercase; }
+  .panel-body { padding: 1.25rem; }
+
+  .params-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 0.75rem; }
+  .param-group { display: flex; flex-direction: column; gap: 6px; }
+  .param-label { font-size: 11px; color: var(--text2); font-family: var(--mono); letter-spacing: 0.06em; text-transform: uppercase; }
+  .param-hint { font-size: 11px; color: var(--text3); }
+
+  .input-wrap { position: relative; display: flex; align-items: center; }
+  .input-wrap .suffix {
+    position: absolute;
+    right: 10px;
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--text3);
+    pointer-events: none;
+  }
+  .param-input {
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 15px;
+    padding: 9px 32px 9px 12px;
+    width: 100%;
+    transition: border-color 0.15s, background 0.15s;
+    outline: none;
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
+  .param-input::-webkit-inner-spin-button,
+  .param-input::-webkit-outer-spin-button { -webkit-appearance: none; }
+  .param-input:focus { border-color: var(--accent); background: var(--surface3); }
+
+  .cheque-preview {
+    grid-column: 1 / -1;
+    background: var(--accent-dim2);
+    border: 1px solid rgba(200,240,60,0.2);
+    border-radius: var(--radius);
+    padding: 0.85rem 1rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 28px;
+    align-items: center;
+  }
+  .cp-label { font-size: 11px; font-family: var(--mono); color: var(--text2); letter-spacing: 0.05em; }
+  .cp-value { font-size: 18px; font-family: var(--mono); color: var(--accent); font-weight: 500; }
+  .cp-detail { font-size: 12px; font-family: var(--mono); color: var(--text2); }
+  .cp-sep { color: var(--text3); }
+
+  .btn-calc {
+    background: var(--accent);
+    color: #0f0f0f;
+    border: none;
+    border-radius: var(--radius);
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    padding: 10px 24px;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+    white-space: nowrap;
+  }
+  .btn-calc:hover { background: var(--accent2); }
+  .btn-calc:active { transform: scale(0.98); }
+
+  .tbl-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; }
+  thead tr { border-bottom: 1px solid var(--border); }
+  th { padding: 9px 14px; text-align: left; font-family: var(--mono); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text3); white-space: nowrap; }
+  th:last-child, td:last-child { text-align: right; }
+  td { padding: 9px 14px; font-family: var(--mono); font-size: 13px; color: var(--text); border-bottom: 1px solid var(--border); white-space: nowrap; }
+  tr:last-child td { border-bottom: none; }
+  tr.reinv-trigger td { background: rgba(200,240,60,0.04); }
+
+  .badge { display: inline-block; font-family: var(--mono); font-size: 10px; letter-spacing: 0.05em; padding: 2px 7px; border-radius: 4px; border: 1px solid; }
+  .b-accent { color: var(--accent);border-color: rgba(200,240,60,0.3); background: var(--accent-dim); }
+
+  .flow-table td.day   { color: var(--text2); }
+  .flow-table td.event { color: var(--text); max-width: 240px; white-space: normal; font-size: 12px; }
+  .flow-table td.ing   { color: var(--green); }
+  .flow-table td.eg    { color: var(--red); }
+  .flow-table td.caja  { color: var(--accent); font-weight: 500; }
+  .flow-table tr.reinv-day { background: rgba(200,240,60,0.03); }
+
+  .empty-state { text-align: center; padding: 3rem 1rem; color: var(--text3); font-family: var(--mono); font-size: 12px; letter-spacing: 0.05em; }
+  .empty-state .arrow { font-size: 24px; margin-bottom: 0.75rem; }
+
+  .app-footer { max-width: 960px; margin: 2.5rem auto 0; padding-top: 1rem; border-top: 1px solid var(--border); font-size: 11px; font-family: var(--mono); color: var(--text3); text-align: right; }
+
+  @media (max-width: 640px) {
+    body { padding: 1rem 0.75rem 3rem; font-size: 13px; }
+
+    .app-header { margin-bottom: 1.25rem; padding-bottom: 1rem; gap: 0.75rem; }
+    .header-text h1 { font-size: 16px; }
+    .header-text p { font-size: 12px; }
+    .header-badge { font-size: 9px; }
+
+    .panel-header { padding: 0.75rem 1rem; }
+    .panel-body { padding: 0.875rem; }
+    .btn-calc { padding: 9px 16px; font-size: 12px; }
+
+    .params-grid { grid-template-columns: repeat(2, 1fr); gap: 0.75rem; }
+    .param-input { font-size: 16px; padding: 10px 30px 10px 10px; }
+    .param-hint { display: none; }
+
+    .cheque-preview { flex-direction: column; gap: 6px; }
+    .cp-sep { display: none; }
+    .cp-value { font-size: 20px; }
+
+    /* Tabla: ocultar Ingreso y Egreso, mostrar solo Día / Evento / Caja */
+    .flow-table th:nth-child(3),
+    .flow-table th:nth-child(4),
+    .flow-table td:nth-child(3),
+    .flow-table td:nth-child(4) { display: none; }
+
+    th { padding: 8px 10px; font-size: 9px; }
+    td { padding: 9px 10px; font-size: 12px; }
+    .flow-table td.event { max-width: 160px; font-size: 11px; }
+    .flow-table td.caja { font-size: 13px; }
+
+    .app-footer { font-size: 10px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <div class="header-badge">v2.0</div>
+  <div class="header-text">
+    <h1>Acreditaciones · Préstamos con Cheques Diferidos</h1>
+  </div>
+</header>
+
+<div class="app-body">
+
+  <div class="panel">
+    <div class="panel-header">
+      <span class="panel-title">Parámetros</span>
+      <button class="btn-calc" onclick="calcular()">Calcular →</button>
+    </div>
+    <div class="panel-body">
+      <div class="params-grid">
+
+        <div class="param-group">
+          <label class="param-label" for="capitalInicial">Capital</label>
+          <div class="input-wrap">
+            <input class="param-input" id="capitalInicial" type="number" value="16000" min="0" step="100" oninput="actualizarPreview()">
+            <span class="suffix">$</span>
+          </div>
+          <span class="param-hint">Fondos propios totales</span>
+        </div>
+
+        <div class="param-group">
+          <label class="param-label" for="montoPrestamo">Préstamo</label>
+          <div class="input-wrap">
+            <input class="param-input" id="montoPrestamo" type="number" value="8000" min="0" step="100" oninput="actualizarPreview()">
+            <span class="suffix">$</span>
+          </div>
+          <span class="param-hint">Lo que le entregás</span>
+        </div>
+
+        <div class="param-group">
+          <label class="param-label" for="valorChequeInput">Val. cheque</label>
+          <div class="input-wrap">
+            <input class="param-input" id="valorChequeInput" type="number" value="2500" min="0" step="50" oninput="actualizarPreview()">
+            <span class="suffix">$</span>
+          </div>
+          <span class="param-hint">Monto de cada cuota</span>
+        </div>
+
+        <div class="param-group">
+          <label class="param-label" for="numCheques">Cheques</label>
+          <div class="input-wrap">
+            <input class="param-input" id="numCheques" type="number" value="4" min="1" max="24" step="1" oninput="actualizarPreview()">
+            <span class="suffix">#</span>
+          </div>
+          <span class="param-hint">Cantidad de cuotas</span>
+        </div>
+
+        <div class="param-group">
+          <label class="param-label" for="diasEntreCheques">Días entre</label>
+          <div class="input-wrap">
+            <input class="param-input" id="diasEntreCheques" type="number" value="30" min="1" step="1" oninput="actualizarPreview()">
+            <span class="suffix">d</span>
+          </div>
+          <span class="param-hint">Plazo entre cuotas</span>
+        </div>
+
+
+<div class="param-group">
+          <label class="param-label" for="reserva">Reserva</label>
+          <div class="input-wrap">
+            <input class="param-input" id="reserva" type="number" value="300" min="0" step="100">
+            <span class="suffix">$</span>
+          </div>
+          <span class="param-hint">Lo que te quedás</span>
+        </div>
+
+        <div class="param-group">
+          <label class="param-label" for="numCiclos">Ciclos</label>
+          <div class="input-wrap">
+            <input class="param-input" id="numCiclos" type="number" value="8" min="1" max="50" step="1">
+            <span class="suffix">#</span>
+          </div>
+          <span class="param-hint">Máx. de préstamos</span>
+        </div>
+
+        <!-- Preview en tiempo real -->
+        <div class="cheque-preview" id="chequePreview">
+          <div>
+            <div class="cp-label">Tasa anual calculada</div>
+            <div class="cp-value" id="pvCheque">—</div>
+          </div>
+          <span class="cp-sep">·</span>
+          <div class="cp-detail" id="pvDetalle">—</div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div id="resultados" style="display:none; flex-direction:column; gap:1.25rem;">
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title">Flujo consolidado</span>
+        <button onclick="exportarExcel()" style="background:var(--accent-dim);border:1px solid var(--accent);color:var(--accent);font-family:var(--mono);font-size:11px;letter-spacing:0.06em;padding:5px 14px;border-radius:6px;cursor:pointer;">↓ Exportar Excel</button>
+      </div>
+      <div class="tbl-wrap">
+        <table class="flow-table">
+          <thead>
+            <tr><th>Día</th><th>Evento</th><th>Ingreso</th><th>Egreso</th><th>Caja</th></tr>
+          </thead>
+          <tbody id="flowBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div id="emptyState" class="empty-state">
+    <div class="arrow">↑</div>
+    Configurá los parámetros y presioná Calcular
+  </div>
+
+</div>
+
+<footer class="app-footer">Gestión financiera interna</footer>
+
+<script>
+function fmt(n) {
+  return '$' + Math.round(n).toLocaleString('es-UY');
+}
+function fmtDec(n, dec) {
+  return '$' + n.toLocaleString('es-UY', { minimumFractionDigits: dec, maximumFractionDigits: dec });
+}
+
+// Calcula la tasa anual a partir del valor de cada cheque
+// retornoTotal = valorCheque × numCheques
+// tasaPeriodo  = retornoTotal / monto - 1
+// tasaAnual    = tasaPeriodo × (365 / diasTotales) × 100
+function calcularTasaDesdeValorCheque(monto, valorCheque, numCheques, diasEntreCheques) {
+  const diasTotales  = numCheques * diasEntreCheques;
+  const retornoTotal = valorCheque * numCheques;
+  const tasaPeriodo  = retornoTotal / monto - 1;
+  const tasaAnual    = tasaPeriodo * (365 / diasTotales) * 100;
+  return { tasaAnual, retornoTotal, diasTotales, tasaPeriodo };
+}
+
+function actualizarPreview() {
+  const monto      = parseFloat(document.getElementById('montoPrestamo').value) || 0;
+  const valCheque  = parseFloat(document.getElementById('valorChequeInput').value) || 0;
+  const numCheques = parseInt(document.getElementById('numCheques').value) || 1;
+  const diasEntre  = parseInt(document.getElementById('diasEntreCheques').value) || 30;
+
+  if (!monto || !valCheque || !numCheques || !diasEntre) return;
+
+  const { tasaAnual, retornoTotal, diasTotales, tasaPeriodo } = calcularTasaDesdeValorCheque(monto, valCheque, numCheques, diasEntre);
+  const ganancia = retornoTotal - monto;
+
+  document.getElementById('pvCheque').textContent = tasaAnual.toFixed(2) + '% anual';
+  document.getElementById('pvDetalle').innerHTML =
+    `${numCheques} cheques × ${diasEntre} días&nbsp;&nbsp;·&nbsp;&nbsp;` +
+    `Total: ${fmt(retornoTotal)}&nbsp;&nbsp;·&nbsp;&nbsp;` +
+    `Interés: ${fmt(ganancia)} (${(tasaPeriodo * 100).toFixed(1)}% en ${diasTotales} días)`;
+}
+
+function calcular() {
+  const capitalInicial   = parseFloat(document.getElementById('capitalInicial').value) || 0;
+  const montoPrestamo    = parseFloat(document.getElementById('montoPrestamo').value) || 0;
+  const valorCheque      = parseFloat(document.getElementById('valorChequeInput').value) || 0;
+  const numCheques       = parseInt(document.getElementById('numCheques').value) || 4;
+  const diasEntreCheques = parseInt(document.getElementById('diasEntreCheques').value) || 30;
+  const reserva          = parseFloat(document.getElementById('reserva').value) || 0;
+  const numCiclos        = parseInt(document.getElementById('numCiclos').value) || 2;
+
+  // Simulación paso a paso: contador global de cheques.
+  // Cada chequesReinversion cobrados se presta de nuevo, SÓLO si hay saldo suficiente.
+  const allEvents      = [];
+  const pendingCheques = [];
+  let loanCount        = 1;
+  let simSaldo          = capitalInicial - montoPrestamo;
+
+  allEvents.push({ dia: 0, ingreso: 0, egreso: montoPrestamo, desc: 'Préstamo 1', esReinversion: false });
+  for (let i = 0; i < numCheques; i++)
+    pendingCheques.push({ dia: diasEntreCheques * (i + 1), loanNum: 1, cuotaNum: i + 1 });
+
+  while (pendingCheques.length > 0) {
+    pendingCheques.sort((a, b) => a.dia - b.dia);
+    const currentDay = pendingCheques[0].dia;
+
+    const todaysCheques = [];
+    while (pendingCheques.length > 0 && pendingCheques[0].dia === currentDay)
+      todaysCheques.push(pendingCheques.shift());
+
+    for (const ch of todaysCheques) {
+      allEvents.push({ dia: ch.dia, ingreso: valorCheque, egreso: 0, desc: `Cuota ${ch.cuotaNum} · préstamo ${ch.loanNum}` });
+      simSaldo += valorCheque;
+
+      if (loanCount < numCiclos && simSaldo >= montoPrestamo + reserva) {
+        loanCount++;
+        simSaldo -= montoPrestamo;
+        allEvents.push({ dia: currentDay, ingreso: 0, egreso: montoPrestamo, desc: `Préstamo ${loanCount}`, esReinversion: true });
+        for (let i = 0; i < numCheques; i++)
+          pendingCheques.push({ dia: currentDay + diasEntreCheques * (i + 1), loanNum: loanCount, cuotaNum: i + 1 });
+      }
+    }
+  }
+
+  const eventos = allEvents;
+  eventos.sort((a, b) => a.dia - b.dia);
+
+  let saldo = capitalInicial;
+  const flujo = eventos.map(ev => {
+    saldo += ev.ingreso - ev.egreso;
+    return { ...ev, saldo };
+  });
+
+  // — Guardar para exportación —
+  lastFlujo  = flujo;
+  const { tasaAnual } = calcularTasaDesdeValorCheque(montoPrestamo, valorCheque, numCheques, diasEntreCheques);
+  lastParams = { capitalInicial, montoPrestamo, valorCheque, numCheques, diasEntreCheques, reserva, numCiclos, tasaAnual };
+
+  // — Render —
+  document.getElementById('emptyState').style.display = 'none';
+  const res = document.getElementById('resultados');
+  res.style.display = 'flex';
+
+  // Flujo
+  document.getElementById('flowBody').innerHTML = flujo.map(ev => `
+    <tr class="${ev.esReinversion ? 'reinv-day' : ''}">
+      <td class="day">Día ${ev.dia}</td>
+      <td class="event">${ev.desc}${ev.esReinversion ? ' <span class="badge b-accent">reinversión</span>' : ''}</td>
+      <td class="ing">${ev.ingreso > 0 ? fmtDec(ev.ingreso, 2) : '—'}</td>
+      <td class="eg">${ev.egreso > 0 ? fmt(ev.egreso) : '—'}</td>
+      <td class="caja">${fmtDec(ev.saldo, 2)}</td>
+    </tr>
+  `).join('');
+}
+
+let lastFlujo = [];
+let lastParams = {};
+
+window.addEventListener('DOMContentLoaded', () => {
+  actualizarPreview();
+  calcular();
+});
+
+async function exportarExcel() {
+  if (!lastFlujo.length) return;
+
+  const wb = new ExcelJS.Workbook();
+  const ws = wb.addWorksheet('Flujo');
+
+  const accentBg  = 'FF2D6A2D';  // verde oscuro para título
+  const headerBg  = 'FF4A7C4A';  // verde medio para encabezados columnas
+  const paramBg   = 'FFF2F2F2';  // gris muy claro para parámetros
+  const rowEven   = 'FFFFFFFF';  // blanco
+  const rowOdd    = 'FFF7F7F7';  // gris muy suave
+  const black     = 'FF111111';
+  const darkGray  = 'FF444444';
+  const colGreen  = 'FF1A6B1A';  // verde oscuro para ingresos
+  const colRed    = 'FFB71C1C';  // rojo oscuro para egresos
+  const colBlue   = 'FF1A3A6B';  // azul oscuro para caja
+  const reinvCol  = 'FF5A6B00';  // oliva para reinversiones
+
+  const hStyle = (bg, color, bold=true, align='center') => ({
+    fill: { type:'pattern', pattern:'solid', fgColor:{argb:bg} },
+    font: { name:'Calibri', size:10, bold, color:{argb:color} },
+    alignment: { vertical:'middle', horizontal:align },
+    border: { bottom:{ style:'thin', color:{argb:'FFCCCCCC'} } }
+  });
+  const cell = (r,c,val,style) => {
+    const ce = ws.getCell(r,c); ce.value = val;
+    if (style.fill)      ce.fill      = style.fill;
+    if (style.font)      ce.font      = style.font;
+    if (style.alignment) ce.alignment = style.alignment;
+    if (style.border)    ce.border    = style.border;
+    if (style.numFmt)    ce.numFmt    = style.numFmt;
+  };
+
+  // — Título —
+  ws.mergeCells(1,1,1,5);
+  cell(1,1,'Préstamos con Cheques Diferidos', hStyle(accentBg, 'FFFFFFFF', true, 'left'));
+  ws.getRow(1).height = 26;
+
+  // — Parámetros —
+  const p = lastParams;
+  const paramRows = [
+    ['Capital inicial', p.capitalInicial],
+    ['Monto préstamo', p.montoPrestamo],
+    ['Valor cheque', p.valorCheque],
+    ['Cheques por préstamo', p.numCheques],
+    ['Días entre cheques', p.diasEntreCheques],
+    ['Reserva', p.reserva],
+    ['Ciclos máx.', p.numCiclos],
+    ['Tasa anual calculada', p.tasaAnual ? p.tasaAnual.toFixed(2) + '%' : '—'],
+  ];
+  paramRows.forEach(([k, v], i) => {
+    const r = 2 + i;
+    ws.mergeCells(r,1,r,2);
+    cell(r,1, k, { fill:{type:'pattern',pattern:'solid',fgColor:{argb:paramBg}}, font:{name:'Calibri',size:10,color:{argb:darkGray}}, alignment:{vertical:'middle',horizontal:'left'} });
+    ws.mergeCells(r,3,r,5);
+    cell(r,3, v, { fill:{type:'pattern',pattern:'solid',fgColor:{argb:paramBg}}, font:{name:'Calibri',size:10,bold:true,color:{argb:black}}, alignment:{vertical:'middle',horizontal:'left'} });
+    ws.getRow(r).height = 18;
+  });
+
+  // — Encabezados tabla —
+  const hr = 2 + paramRows.length + 1;
+  ['Día','Evento','Ingreso','Egreso','Caja'].forEach((h,i) => {
+    cell(hr, i+1, h, hStyle(headerBg, 'FFFFFFFF'));
+  });
+  ws.getRow(hr).height = 20;
+
+  // — Filas flujo —
+  lastFlujo.forEach((ev, i) => {
+    const r = hr + 1 + i;
+    const bg = i % 2 === 0 ? rowEven : rowOdd;
+    const border = { bottom:{ style:'thin', color:{argb:'FFEEEEEE'} } };
+    const base = { fill:{type:'pattern',pattern:'solid',fgColor:{argb:bg}}, font:{name:'Calibri',size:10,color:{argb:black}}, alignment:{vertical:'middle'}, border };
+    cell(r,1, `Día ${ev.dia}`,  {...base, font:{...base.font,color:{argb:darkGray}}});
+    cell(r,2, ev.desc,          {...base, font:{...base.font,color:{argb:ev.esReinversion?reinvCol:black},italic:ev.esReinversion}});
+    cell(r,3, ev.ingreso||null, {...base, numFmt:'"$"#,##0.00', font:{...base.font,color:{argb:colGreen},bold:true}, alignment:{...base.alignment,horizontal:'right'}});
+    cell(r,4, ev.egreso||null,  {...base, numFmt:'"$"#,##0.00', font:{...base.font,color:{argb:colRed},bold:true},  alignment:{...base.alignment,horizontal:'right'}});
+    cell(r,5, ev.saldo,         {...base, numFmt:'"$"#,##0.00', font:{...base.font,color:{argb:colBlue},bold:true}, alignment:{...base.alignment,horizontal:'right'}});
+    ws.getRow(r).height = 18;
+  });
+
+  ws.columns = [{width:12},{width:36},{width:16},{width:16},{width:16}];
+
+  const buf  = await wb.xlsx.writeBuffer();
+  const blob = new Blob([buf], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+  const a    = document.createElement('a');
+  a.href     = URL.createObjectURL(blob);
+  a.download = 'prestamos_cheques_' + new Date().toISOString().split('T')[0] + '.xlsx';
+  a.click();
+}
+</script>
+<script src="https://cdn.jsdelivr.net/npm/exceljs@4.3.0/dist/exceljs.min.js"></script>
+</body>
+</html>

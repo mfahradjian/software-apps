@@ -1,0 +1,1580 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Consultorio" />
+<meta name="theme-color" content="#201A1D" />
+<title>Consultorio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    color-scheme: dark;
+    --bg:#201A1D; --surface:#2B2226; --ink:#EDE6E9; --ink-soft:#A8929B;
+    --sage:#B8577C; --sage-deep:#D98AA8; --danger:#D9705F; --line:#4A3B41; --radius:10px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:'Inter',sans-serif;font-size:15px;line-height:1.5}
+  h1,h2,h3{font-family:'Fraunces',serif;font-weight:600;color:var(--sage-deep);margin:0 0 .4em}
+  button{font-family:'Inter',sans-serif;cursor:pointer}
+  .app-shell{display:flex;min-height:100vh}
+  .sidebar{width:200px;flex-shrink:0;background:#1A1316;color:#EDEFEC;padding:28px 20px}
+  .sidebar h1{color:#fff;font-size:1.1rem;margin-bottom:24px}
+  .nav-link{display:block;width:100%;padding:9px 12px;border:none;background:none;border-radius:var(--radius);color:#D9DEDA;font-size:.92rem;margin-bottom:2px;text-decoration:none;font-weight:600;text-align:left}
+  .nav-link:hover,.nav-link.active{background:rgba(255,255,255,.09);color:#fff}
+  .nav-toggle{display:flex;align-items:center;justify-content:space-between}
+  .nav-toggle::after{content:"›";transition:transform .15s;font-size:1rem}
+  .nav-toggle.expanded::after{transform:rotate(90deg)}
+  .nav-submenu{max-height:0;overflow:hidden}
+  .nav-submenu.open{max-height:200px}
+  .nav-sublink{padding-left:24px;font-weight:500}
+  .main{flex:1;padding:40px 48px;max-width:960px}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:24px;margin-bottom:20px}
+  .toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;gap:12px}
+  .btn{border:none;border-radius:var(--radius);padding:9px 16px;font-size:.88rem;font-weight:500;background:var(--sage);color:#fff}
+  .btn:hover{background:var(--sage-deep);color:#2A1B20}
+  .btn-ghost{background:transparent;color:var(--sage-deep);border:1px solid var(--line)}
+  .btn-ghost:hover{background:#35292E}
+  table{width:100%;border-collapse:collapse;font-size:.9rem}
+  th{text-align:left;font-weight:500;color:var(--ink-soft);padding:8px 10px;border-bottom:1px solid var(--line);font-size:.75rem;text-transform:uppercase;letter-spacing:.04em}
+  td{padding:10px;border-bottom:1px solid var(--line)}
+  tr:last-child td{border-bottom:none}
+  tr.row-link:hover{background:#332830;cursor:pointer}
+  .field{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;min-width:0}
+  .field label{font-size:.8rem;color:var(--ink-soft)}
+  .field input,.field select{width:100%;height:44px;padding:0 10px;border:1px solid var(--line);border-radius:8px;font-family:'Inter',sans-serif;font-size:.92rem;background:#211A1D;color:var(--ink)}
+  .field textarea{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:8px;font-family:'Inter',sans-serif;font-size:.92rem;background:#211A1D;color:var(--ink)}
+  .field input[type="date"],.field input[type="time"]{text-align:left;min-width:0;width:100%;box-sizing:border-box}
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 16px}
+  .grid-fecha-hora{display:flex;gap:16px}
+  .grid-fecha-hora .field:first-child{flex:1;min-width:0}
+  .grid-fecha-hora .field:last-child{flex:0 0 150px;min-width:0}
+  .empty-state{color:var(--ink-soft);padding:32px 0;text-align:center}
+  .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:10}
+  .modal{background:var(--surface);border-radius:var(--radius);padding:24px;width:420px;max-width:90vw;box-shadow:0 20px 60px rgba(0,0,0,.5);max-height:85vh;overflow-y:auto}
+  .saldo-positivo{color:var(--danger);font-weight:600}
+  .saldo-negativo{color:var(--sage-deep);font-weight:600}
+  .saldo-cero{color:var(--ink-soft)}
+  .monto-positivo{color:var(--sage-deep);font-weight:600}
+  .monto-negativo{color:var(--danger);font-weight:600}
+  .tabs button{margin-right:8px}
+  tr.fila-pagada{background:#20332A}
+  tr.fila-parcial{background:#3B321C}
+  tr.fila-pendiente{background:#3A2521}
+  .hidden{display:none !important}
+  .centered-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:16px}
+  #auth-screen{display:flex;align-items:center;justify-content:center;min-height:100vh}
+  #auth-screen .card{width:340px}
+  .msg-error{color:var(--danger);font-size:.85rem;margin-top:8px}
+  .table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+
+  @media (max-width: 700px){
+    .app-shell{flex-direction:column;min-height:auto}
+    .sidebar{width:100%;padding:14px 16px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+    .sidebar h1{margin:0;font-size:1rem;white-space:nowrap}
+    .nav-link{display:inline-block;width:auto;padding:7px 10px;margin-bottom:0;font-size:.85rem}
+    .nav-toggle{display:inline-flex}
+    .nav-submenu{flex-basis:100%}
+    .nav-sublink{padding-left:10px}
+    .main{padding:20px 16px;max-width:100%}
+    .card{padding:16px}
+    h2{font-size:1.15rem}
+    .toolbar{flex-wrap:wrap;gap:10px}
+    .form-grid{grid-template-columns:1fr}
+    .grid-fecha-hora{flex-direction:column;gap:0}
+    .grid-fecha-hora .field:first-child,.grid-fecha-hora .field:last-child{flex:none;width:100%}
+    table{font-size:.82rem}
+    th,td{padding:8px 6px;white-space:nowrap}
+    .modal-backdrop{padding:16px}
+    .modal{width:100%;padding:20px}
+    .centered-screen .card{width:100% !important;max-width:340px}
+  }
+</style>
+</head>
+<body>
+
+<!-- Pantalla de clave simple (protección básica, igual que Parking) -->
+<div id="clave-screen" class="centered-screen">
+  <div class="card" style="width:320px;max-width:100%">
+    <h2>Consultorio</h2>
+    <form id="clave-form">
+      <div class="field">
+        <label>Clave</label>
+        <input type="password" id="clave-input" required autofocus />
+      </div>
+      <button class="btn" type="submit" style="width:100%">Entrar</button>
+      <p class="msg-error hidden" id="clave-error">Clave incorrecta.</p>
+    </form>
+  </div>
+</div>
+
+<!-- App principal -->
+<div class="app-shell hidden" id="app-shell">
+  <aside class="sidebar">
+    <h1>Consultorio</h1>
+    <a href="#/" class="nav-link" data-route="/">Pacientes</a>
+    <a href="#/agenda" class="nav-link" data-route="/agenda">Agenda</a>
+    <button type="button" class="nav-link nav-toggle" id="nav-finanzas">Finanzas</button>
+    <div class="nav-submenu" id="submenu-finanzas">
+      <a href="#/reportes" class="nav-link nav-sublink" data-route="/reportes">Consultorio</a>
+      <a href="#/mis-finanzas" class="nav-link nav-sublink" data-route="/mis-finanzas">Mis Finanzas</a>
+    </div>
+  </aside>
+  <main class="main" id="main"></main>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {
+  getFirestore, collection, doc, addDoc, updateDoc, deleteDoc, getDoc, getDocs,
+  query, where, orderBy
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import ExcelJS from "https://esm.sh/exceljs@4.4.0";
+
+// ------------------------------------------------------------------
+// Completar con los datos del proyecto de Firebase
+// (Consola de Firebase > Configuración del proyecto > Tus apps)
+// ------------------------------------------------------------------
+const firebaseConfig = {
+  apiKey: "AIzaSyAYdZmsu4rBiIBMcPDX_gH8ZW1i8BntcTw",
+  authDomain: "consultorio-1de6e.firebaseapp.com",
+  projectId: "consultorio-1de6e",
+  storageBucket: "consultorio-1de6e.firebasestorage.app",
+  messagingSenderId: "777670115883",
+  appId: "1:777670115883:web:c5fa3e4ac9bed76108606e",
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const pacientesRef = collection(db, "pacientes");
+const sesionesRef = collection(db, "sesiones");
+const pagosRef = collection(db, "pagos");
+const rubrosRef = collection(db, "rubros");
+const gastosRef = collection(db, "gastos");
+const rubrosMisFinanzasRef = collection(db, "rubrosMisFinanzas");
+const movimientosRef = collection(db, "movimientos");
+const centrosCostoRef = collection(db, "centrosCosto");
+
+// ---------- Acceso a datos ----------
+async function crearPaciente(data) {
+  return addDoc(pacientesRef, {
+    nombre: data.nombre, apellido: data.apellido, telefono: data.telefono,
+    cedula: data.cedula, fechaInicio: data.fechaInicio, activo: true,
+  });
+}
+async function listarPacientes() {
+  const snap = await getDocs(query(pacientesRef, orderBy("apellido")));
+  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+}
+async function obtenerPaciente(id) {
+  const snap = await getDoc(doc(db, "pacientes", id));
+  return snap.exists() ? { id: snap.id, ...snap.data() } : null;
+}
+
+async function crearSesion(data) {
+  return addDoc(sesionesRef, {
+    pacienteId: data.pacienteId, fecha: data.fecha, hora: data.hora || "", notas: data.notas || "",
+    asistio: data.asistio ?? true, valor: Number(data.valor) || 0,
+  });
+}
+async function listarSesionesPorPaciente(pacienteId) {
+  const snap = await getDocs(query(sesionesRef, where("pacienteId", "==", pacienteId)));
+  return snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => (b.fecha + (b.hora || "")).localeCompare(a.fecha + (a.hora || "")));
+}
+async function listarSesionesPorRango(desde, hasta) {
+  const snap = await getDocs(query(sesionesRef, where("fecha", ">=", desde), where("fecha", "<=", hasta)));
+  return snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => (a.fecha + (a.hora || "")).localeCompare(b.fecha + (b.hora || "")));
+}
+async function actualizarSesion(id, data) {
+  return updateDoc(doc(db, "sesiones", id), {
+    fecha: data.fecha, hora: data.hora || "", notas: data.notas || "", asistio: data.asistio, valor: Number(data.valor) || 0,
+  });
+}
+async function borrarSesion(id) {
+  return deleteDoc(doc(db, "sesiones", id));
+}
+
+async function crearPago(data) {
+  return addDoc(pagosRef, {
+    pacienteId: data.pacienteId, sesionId: data.sesionId || null,
+    fecha: data.fecha, monto: Number(data.monto) || 0, notas: data.notas || "",
+  });
+}
+async function listarPagosPorPaciente(pacienteId) {
+  const snap = await getDocs(query(pagosRef, where("pacienteId", "==", pacienteId)));
+  return snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => b.fecha.localeCompare(a.fecha));
+}
+async function actualizarPago(id, data) {
+  return updateDoc(doc(db, "pagos", id), data);
+}
+async function borrarPago(id) {
+  return deleteDoc(doc(db, "pagos", id));
+}
+async function listarPagosPorRango(desde, hasta) {
+  const snap = await getDocs(query(pagosRef, where("fecha", ">=", desde), where("fecha", "<=", hasta)));
+  return snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => a.fecha.localeCompare(b.fecha));
+}
+
+async function crearRubro(data) {
+  return addDoc(rubrosRef, { nombre: data.nombre });
+}
+async function listarRubros() {
+  const snap = await getDocs(query(rubrosRef, orderBy("nombre")));
+  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+}
+
+async function crearGasto(data) {
+  return addDoc(gastosRef, {
+    rubroId: data.rubroId, fecha: data.fecha, monto: Number(data.monto) || 0, notas: data.notas || "",
+  });
+}
+async function listarGastosPorRango(desde, hasta) {
+  const snap = await getDocs(query(gastosRef, where("fecha", ">=", desde), where("fecha", "<=", hasta)));
+  return snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => a.fecha.localeCompare(b.fecha));
+}
+async function actualizarGasto(id, data) {
+  return updateDoc(doc(db, "gastos", id), {
+    rubroId: data.rubroId, fecha: data.fecha, monto: Number(data.monto) || 0, notas: data.notas || "",
+  });
+}
+async function borrarGasto(id) {
+  return deleteDoc(doc(db, "gastos", id));
+}
+
+// Rubros de Mis Finanzas: a diferencia de los rubros de Consultorio, cada uno
+// define si sus movimientos son un ingreso o un gasto.
+async function crearRubroPersonal(data) {
+  return addDoc(rubrosMisFinanzasRef, { nombre: data.nombre, tipo: data.tipo === "ingreso" ? "ingreso" : "gasto" });
+}
+async function listarRubrosPersonales() {
+  const snap = await getDocs(query(rubrosMisFinanzasRef, orderBy("nombre")));
+  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+}
+
+async function crearMovimiento(data) {
+  return addDoc(movimientosRef, {
+    rubroId: data.rubroId, fecha: data.fecha, monto: Number(data.monto) || 0, notas: data.notas || "",
+    centroCostoId: data.centroCostoId || null,
+  });
+}
+async function listarMovimientosPorRango(desde, hasta) {
+  const snap = await getDocs(query(movimientosRef, where("fecha", ">=", desde), where("fecha", "<=", hasta)));
+  return snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => a.fecha.localeCompare(b.fecha));
+}
+async function actualizarMovimiento(id, data) {
+  return updateDoc(doc(db, "movimientos", id), {
+    rubroId: data.rubroId, fecha: data.fecha, monto: Number(data.monto) || 0, notas: data.notas || "",
+    centroCostoId: data.centroCostoId || null,
+  });
+}
+async function borrarMovimiento(id) {
+  return deleteDoc(doc(db, "movimientos", id));
+}
+
+async function crearCentroCosto(data) {
+  return addDoc(centrosCostoRef, { nombre: data.nombre });
+}
+async function listarCentrosCosto() {
+  const snap = await getDocs(query(centrosCostoRef, orderBy("nombre")));
+  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+}
+async function actualizarCentroCosto(id, data) {
+  return updateDoc(doc(db, "centrosCosto", id), { nombre: data.nombre });
+}
+async function borrarCentroCosto(id) {
+  return deleteDoc(doc(db, "centrosCosto", id));
+}
+
+async function actualizarPaciente(id, data) {
+  return updateDoc(doc(db, "pacientes", id), {
+    nombre: data.nombre, apellido: data.apellido, telefono: data.telefono,
+    cedula: data.cedula, fechaInicio: data.fechaInicio,
+  });
+}
+
+// Total pagado por cada sesión, a partir de los pagos vinculados (pago.sesionId).
+function pagosPorSesion(pagos) {
+  const totales = {};
+  pagos.forEach(p => {
+    if (p.sesionId) totales[p.sesionId] = (totales[p.sesionId] || 0) + Number(p.monto || 0);
+  });
+  return totales;
+}
+
+// Estado de cuenta: una fila por consulta (debe = valor, haber = pagos vinculados a esa consulta),
+// ordenadas por fecha con saldo corriente. Ya no hay línea aparte para los pagos.
+function estadoDeCuenta(sesiones, pagado) {
+  const ordenadas = [...sesiones].sort((a, b) => a.fecha.localeCompare(b.fecha));
+  let saldo = 0;
+  return ordenadas.map(s => {
+    const haber = pagado[s.id] || 0;
+    saldo += s.valor - haber;
+    const clase = s.valor === 0 ? "" : haber >= s.valor ? "fila-pagada" : haber > 0 ? "fila-parcial" : "fila-pendiente";
+    return { ...s, haber, saldo, clase };
+  });
+}
+
+// ---------- Utilidades UI ----------
+const $ = (sel, root = document) => root.querySelector(sel);
+const money = n => `$${Number(n).toLocaleString("es-UY")}`;
+
+const navFinanzas = $("#nav-finanzas");
+const submenuFinanzas = $("#submenu-finanzas");
+navFinanzas.addEventListener("click", () => {
+  submenuFinanzas.classList.toggle("open");
+  navFinanzas.classList.toggle("expanded", submenuFinanzas.classList.contains("open"));
+});
+
+// Reemplazan a alert/confirm/prompt nativos del navegador por modales con el estilo de la app.
+function mostrarAlerta(mensaje) {
+  return new Promise(resolve => {
+    const backdrop = document.createElement("div");
+    backdrop.className = "modal-backdrop";
+    backdrop.innerHTML = `
+      <div class="modal" style="width:340px">
+        <p style="margin:0 0 20px">${mensaje}</p>
+        <button type="button" class="btn" id="btn-alerta-ok" style="width:100%">Aceptar</button>
+      </div>
+    `;
+    document.body.appendChild(backdrop);
+    const cerrar = () => { backdrop.remove(); resolve(); };
+    backdrop.addEventListener("click", (e) => { if (e.target === backdrop) cerrar(); });
+    $("#btn-alerta-ok", backdrop).addEventListener("click", cerrar);
+  });
+}
+
+function mostrarConfirm(mensaje, { textoConfirmar = "Borrar", peligro = true } = {}) {
+  return new Promise(resolve => {
+    const backdrop = document.createElement("div");
+    backdrop.className = "modal-backdrop";
+    backdrop.innerHTML = `
+      <div class="modal" style="width:340px">
+        <p style="margin:0 0 20px">${mensaje}</p>
+        <div class="toolbar">
+          <button type="button" class="btn btn-ghost" id="btn-confirm-cancelar">Cancelar</button>
+          <button type="button" class="btn" id="btn-confirm-ok" style="${peligro ? "background:var(--danger)" : ""}">${textoConfirmar}</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(backdrop);
+    const cerrar = (valor) => { backdrop.remove(); resolve(valor); };
+    backdrop.addEventListener("click", (e) => { if (e.target === backdrop) cerrar(false); });
+    $("#btn-confirm-cancelar", backdrop).addEventListener("click", () => cerrar(false));
+    $("#btn-confirm-ok", backdrop).addEventListener("click", () => cerrar(true));
+  });
+}
+
+// Menú de acciones sobre una fila de movimiento (gasto, movimiento, etc.):
+// resuelve "editar", "borrar" o null (cancelado).
+function mostrarMenuAcciones(mensaje) {
+  return new Promise(resolve => {
+    const backdrop = document.createElement("div");
+    backdrop.className = "modal-backdrop";
+    backdrop.innerHTML = `
+      <div class="modal" style="width:340px">
+        <p style="margin:0 0 20px">${mensaje}</p>
+        <div class="toolbar">
+          <button type="button" class="btn btn-ghost" id="btn-menu-cancelar">Cancelar</button>
+          <button type="button" class="btn btn-ghost" id="btn-menu-borrar" style="color:var(--danger);border-color:var(--danger)">Borrar</button>
+          <button type="button" class="btn" id="btn-menu-editar">Editar</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(backdrop);
+    const cerrar = (valor) => { backdrop.remove(); resolve(valor); };
+    backdrop.addEventListener("click", (e) => { if (e.target === backdrop) cerrar(null); });
+    $("#btn-menu-cancelar", backdrop).addEventListener("click", () => cerrar(null));
+    $("#btn-menu-borrar", backdrop).addEventListener("click", () => cerrar("borrar"));
+    $("#btn-menu-editar", backdrop).addEventListener("click", () => cerrar("editar"));
+  });
+}
+
+function mostrarPrompt(mensaje, valorInicial = "", tipo = "number") {
+  return new Promise(resolve => {
+    const backdrop = document.createElement("div");
+    backdrop.className = "modal-backdrop";
+    backdrop.innerHTML = `
+      <div class="modal" style="width:340px">
+        <form id="form-prompt">
+          <div class="field"><label>${mensaje}</label><input name="valor" type="${tipo}" value="${valorInicial}" autofocus /></div>
+          <div class="toolbar">
+            <button type="button" class="btn btn-ghost" id="btn-prompt-cancelar">Cancelar</button>
+            <button type="submit" class="btn">Aceptar</button>
+          </div>
+        </form>
+      </div>
+    `;
+    document.body.appendChild(backdrop);
+    const cerrar = (valor) => { backdrop.remove(); resolve(valor); };
+    backdrop.addEventListener("click", (e) => { if (e.target === backdrop) cerrar(null); });
+    $("#btn-prompt-cancelar", backdrop).addEventListener("click", () => cerrar(null));
+    $("#form-prompt", backdrop).addEventListener("submit", (e) => {
+      e.preventDefault();
+      cerrar(new FormData(e.target).get("valor"));
+    });
+  });
+}
+function telFormato(t) {
+  if (!t) return "";
+  const limpio = t.trim();
+  return limpio.startsWith("+") ? limpio : `+598 ${limpio}`;
+}
+// Dígitos del teléfono sin contar el prefijo de país 598 (con o sin "+").
+function digitosTelefono(t) {
+  const soloDigitos = (t || "").replace(/\D/g, "");
+  return soloDigitos.startsWith("598") ? soloDigitos.slice(3) : soloDigitos;
+}
+// Fecha de hoy en la hora local del dispositivo (no UTC), para que coincida con el huso de Uruguay.
+function hoyISO() {
+  const d = new Date();
+  const mes = String(d.getMonth() + 1).padStart(2, "0");
+  const dia = String(d.getDate()).padStart(2, "0");
+  return `${d.getFullYear()}-${mes}-${dia}`;
+}
+function primerDiaDeMesISO() {
+  const d = new Date();
+  const mes = String(d.getMonth() + 1).padStart(2, "0");
+  return `${d.getFullYear()}-${mes}-01`;
+}
+const main = $("#main");
+
+function render(html) { main.innerHTML = html; }
+
+// ---------- Clave simple ----------
+// Cambiá esta clave por la que quieras usar.
+const APP_PASSWORD = "cami0811";
+const SESION_MS = 5 * 60 * 1000; // la sesión expira a los 5 minutos de inactividad
+
+function registrarActividad() {
+  localStorage.setItem("consultorio_ultima_actividad", String(Date.now()));
+}
+function sesionExpirada() {
+  const ultima = Number(localStorage.getItem("consultorio_ultima_actividad") || 0);
+  return Date.now() - ultima > SESION_MS;
+}
+function mostrarClave() {
+  localStorage.removeItem("consultorio_ok");
+  localStorage.removeItem("consultorio_ultima_actividad");
+  $("#app-shell").classList.add("hidden");
+  $("#clave-screen").classList.remove("hidden");
+  $("#clave-input").value = "";
+}
+function entrarALaApp() {
+  registrarActividad();
+  $("#clave-screen").classList.add("hidden");
+  $("#app-shell").classList.remove("hidden");
+  route();
+}
+
+const yaEntro = localStorage.getItem("consultorio_ok") === "1" && !sesionExpirada();
+if (yaEntro) {
+  entrarALaApp();
+} else {
+  localStorage.removeItem("consultorio_ok");
+}
+
+$("#clave-form").addEventListener("submit", (e) => {
+  e.preventDefault();
+  const valor = $("#clave-input").value;
+  if (valor === APP_PASSWORD) {
+    localStorage.setItem("consultorio_ok", "1");
+    entrarALaApp();
+  } else {
+    $("#clave-error").classList.remove("hidden");
+  }
+});
+
+// Cualquier interacción, mientras haya sesión activa, renueva el contador de inactividad.
+["click", "keydown", "touchstart", "scroll"].forEach(evento => {
+  document.addEventListener(evento, () => {
+    if (localStorage.getItem("consultorio_ok") === "1") registrarActividad();
+  }, { passive: true });
+});
+
+function chequearExpiracion() {
+  if (localStorage.getItem("consultorio_ok") === "1" && sesionExpirada()) mostrarClave();
+}
+setInterval(chequearExpiracion, 15000);
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible") chequearExpiracion();
+});
+
+// ---------- Router simple por hash ----------
+window.addEventListener("hashchange", route);
+
+function route() {
+  const hash = location.hash.slice(1) || "/";
+  document.querySelectorAll(".nav-link[data-route]").forEach(a => {
+    a.classList.toggle("active", a.dataset.route === (hash.startsWith("/pacientes/") ? "/" : hash));
+  });
+  if (submenuFinanzas.querySelector(`[data-route="${hash}"]`)) {
+    submenuFinanzas.classList.add("open");
+    navFinanzas.classList.add("expanded");
+  }
+  if (hash === "/agenda") return renderAgenda();
+  if (hash === "/reportes") return renderReportes();
+  if (hash === "/mis-finanzas") return renderMisFinanzas();
+  const match = hash.match(/^\/pacientes\/(.+)$/);
+  if (match) return renderPacienteDetalle(match[1]);
+  return renderPacientes();
+}
+
+// ---------- Vista: Pacientes ----------
+async function renderPacientes() {
+  render(`
+    <div class="toolbar">
+      <h2>Pacientes</h2>
+      <button class="btn" id="btn-nuevo-paciente">+ Nuevo paciente</button>
+    </div>
+    <div class="card" id="tabla-pacientes"><p class="empty-state">Cargando...</p></div>
+  `);
+  $("#btn-nuevo-paciente").addEventListener("click", () => abrirModalPaciente());
+
+  const cont = $("#tabla-pacientes");
+  let pacientes;
+  try {
+    pacientes = await listarPacientes();
+  } catch (err) {
+    console.error(err);
+    cont.innerHTML = `<p class="empty-state">Error al cargar los pacientes: ${err.message}</p>`;
+    return;
+  }
+  if (pacientes.length === 0) {
+    cont.innerHTML = `<p class="empty-state">Todavía no hay pacientes cargados.</p>`;
+    return;
+  }
+  cont.innerHTML = `
+    <div class="table-scroll">
+    <table>
+      <thead><tr><th>Apellido</th><th>Nombre</th><th>Teléfono</th><th>Inicio</th></tr></thead>
+      <tbody>
+        ${pacientes.map(p => `
+          <tr class="row-link" data-id="${p.id}">
+            <td>${p.apellido}</td><td>${p.nombre}</td><td>${telFormato(p.telefono)}</td><td>${p.fechaInicio}</td>
+          </tr>
+        `).join("")}
+      </tbody>
+    </table>
+    </div>
+  `;
+  cont.querySelectorAll("tr.row-link").forEach(tr => {
+    tr.addEventListener("click", () => { location.hash = `/pacientes/${tr.dataset.id}`; });
+  });
+}
+
+function abrirModalPaciente(pacienteExistente, onGuardado) {
+  const esEdicion = !!pacienteExistente;
+  const p = pacienteExistente || {};
+  const backdrop = document.createElement("div");
+  backdrop.className = "modal-backdrop";
+  backdrop.innerHTML = `
+    <div class="modal">
+      <h3>${esEdicion ? "Editar paciente" : "Nuevo paciente"}</h3>
+      <form id="form-paciente">
+        <div class="form-grid">
+          <div class="field"><label>Nombre</label><input required name="nombre" value="${p.nombre || ""}" /></div>
+          <div class="field"><label>Apellido</label><input required name="apellido" value="${p.apellido || ""}" /></div>
+          <div class="field"><label>Teléfono</label><input name="telefono" value="${p.telefono || "+598 "}" /></div>
+          <div class="field"><label>Cédula</label><input name="cedula" value="${p.cedula || ""}" /></div>
+          <div class="field" style="grid-column:1 / -1"><label>Fecha de inicio</label><input type="date" name="fechaInicio" value="${p.fechaInicio || ""}" /></div>
+        </div>
+        <p class="msg-error hidden" id="paciente-error"></p>
+        <div class="toolbar">
+          <button type="button" class="btn btn-ghost" id="btn-cancelar">Cancelar</button>
+          <button type="submit" class="btn">Guardar</button>
+        </div>
+      </form>
+    </div>
+  `;
+  document.body.appendChild(backdrop);
+  backdrop.addEventListener("click", (e) => { if (e.target === backdrop) backdrop.remove(); });
+  $("#btn-cancelar", backdrop).addEventListener("click", () => backdrop.remove());
+  $("#form-paciente", backdrop).addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const data = Object.fromEntries(new FormData(e.target));
+    const errEl = $("#paciente-error", backdrop);
+    if (digitosTelefono(data.telefono).length !== 8) {
+      errEl.textContent = "El teléfono debe tener 8 dígitos, sin contar el +598.";
+      errEl.classList.remove("hidden");
+      return;
+    }
+    errEl.classList.add("hidden");
+    try {
+      if (esEdicion) await actualizarPaciente(p.id, data);
+      else await crearPaciente(data);
+      backdrop.remove();
+      if (onGuardado) onGuardado(); else renderPacientes();
+    } catch (err) {
+      console.error(err);
+      errEl.textContent = `Error al guardar: ${err.message}`;
+      errEl.classList.remove("hidden");
+    }
+  });
+}
+
+// ---------- Vista: Ficha de paciente ----------
+async function renderPacienteDetalle(id) {
+  render(`<p class="empty-state">Cargando...</p>`);
+  let paciente, sesiones, pagos;
+  try {
+    [paciente, sesiones, pagos] = await Promise.all([
+      obtenerPaciente(id), listarSesionesPorPaciente(id), listarPagosPorPaciente(id),
+    ]);
+  } catch (err) {
+    console.error(err);
+    render(`<p class="empty-state">Error al cargar el paciente: ${err.message}</p>`);
+    return;
+  }
+  if (!paciente) { render(`<p class="empty-state">Paciente no encontrado.</p>`); return; }
+
+  const pagado = pagosPorSesion(pagos);
+  const cuenta = estadoDeCuenta(sesiones, pagado);
+  const saldo = cuenta.length ? cuenta[cuenta.length - 1].saldo : 0;
+  const saldoClase = saldo > 0 ? "saldo-positivo" : saldo < 0 ? "saldo-negativo" : "saldo-cero";
+  const saldoTexto = saldo > 0 ? `Debe ${money(saldo)}` : saldo < 0 ? `A favor ${money(Math.abs(saldo))}` : "Al día";
+
+  render(`
+    <a href="#/" class="btn btn-ghost" style="display:inline-block;margin-bottom:16px;text-decoration:none">← Pacientes</a>
+    <div class="card">
+      <div class="toolbar">
+        <div>
+          <h2 style="margin-bottom:4px">${paciente.nombre} ${paciente.apellido}</h2>
+          <div style="color:var(--ink-soft);font-size:.88rem">CI ${paciente.cedula} · Tel ${telFormato(paciente.telefono)} · Desde ${paciente.fechaInicio}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:16px">
+          <div class="${saldoClase}" style="font-size:1.05rem">${saldoTexto}</div>
+          <button class="btn btn-ghost" id="btn-editar-paciente">Editar</button>
+        </div>
+      </div>
+    </div>
+    <div class="toolbar">
+      <h2>Estado de cuenta</h2>
+      <div>
+        <button class="btn btn-ghost" id="btn-nueva-sesion">+ Sesión</button>
+        <button class="btn" id="btn-nuevo-pago">+ Pago</button>
+      </div>
+    </div>
+    <div class="card">
+      ${cuenta.length === 0
+        ? `<p class="empty-state">Todavía no hay consultas registradas.</p>`
+        : `<div class="table-scroll"><table><thead><tr><th>Fecha</th><th>Hora</th><th>Asistió</th><th>Notas</th><th>Debe</th><th>Haber</th><th>Saldo</th></tr></thead>
+           <tbody>${cuenta.map(s => `
+             <tr class="row-link ${s.clase}" data-id="${s.id}"><td>${s.fecha}</td><td>${s.hora || "—"}</td><td>${s.asistio ? "Sí" : "No"}</td><td>${s.notas || ""}</td><td>${money(s.valor)}</td><td>${s.haber ? money(s.haber) : "—"}</td><td>${money(s.saldo)}</td></tr>
+           `).join("")}</tbody></table></div>`
+      }
+    </div>
+  `);
+
+  $("#btn-editar-paciente").addEventListener("click", () => {
+    abrirModalPaciente(paciente, () => renderPacienteDetalle(id));
+  });
+  $("#btn-nueva-sesion").addEventListener("click", () => {
+    abrirModalSesion(id, () => renderPacienteDetalle(id));
+  });
+  document.querySelectorAll("tr.row-link[data-id]").forEach(tr => {
+    tr.addEventListener("click", () => {
+      const sesion = sesiones.find(s => s.id === tr.dataset.id);
+      const pagosVinculados = pagos.filter(p => p.sesionId === tr.dataset.id);
+      abrirModalConsulta(sesion, pagosVinculados, () => renderPacienteDetalle(id));
+    });
+  });
+  $("#btn-nuevo-pago").addEventListener("click", async () => {
+    if (sesiones.length === 0) { await mostrarAlerta("Primero registrá una consulta para poder asociarle un pago."); return; }
+    abrirModalPago(id, sesiones, pagado, () => renderPacienteDetalle(id));
+  });
+}
+
+// Si la sesión es a futuro, oculta Valor y Asistió: todavía no ocurrió,
+// así que no corresponde cargar precio ni asistencia (y no ensucia los reportes).
+function actualizarCamposFuturo(root, { forzarAsistio = true } = {}) {
+  const fechaInput = $("[name=fecha]", root);
+  const campoValor = $("#campo-valor", root);
+  const campoAsistio = $("#campo-asistio", root);
+  const valorInput = $("[name=valor]", root);
+  const asistioInput = $("[name=asistio]", root);
+  const esFutura = fechaInput.value && fechaInput.value > hoyISO();
+  campoValor.classList.toggle("hidden", esFutura);
+  campoAsistio.classList.toggle("hidden", esFutura);
+  valorInput.required = !esFutura;
+  if (esFutura) asistioInput.checked = false;
+  else if (forzarAsistio) asistioInput.checked = true;
+}
+
+function abrirModalSesion(pacienteId, onGuardado) {
+  const backdrop = document.createElement("div");
+  backdrop.className = "modal-backdrop";
+  backdrop.innerHTML = `
+    <div class="modal">
+      <h3>Nueva sesión</h3>
+      <form id="form-sesion">
+        <div class="grid-fecha-hora">
+          <div class="field"><label>Fecha</label><input type="date" required name="fecha" /></div>
+          <div class="field"><label>Hora</label><input type="time" name="hora" /></div>
+        </div>
+        <div class="field" id="campo-valor"><label>Valor</label><input type="number" required name="valor" /></div>
+        <div class="field"><label>Notas</label><textarea rows="3" name="notas"></textarea></div>
+        <div class="field" id="campo-asistio" style="flex-direction:row;align-items:center;gap:8px">
+          <input type="checkbox" name="asistio" checked style="width:auto" />
+          <label style="margin:0">Asistió</label>
+        </div>
+        <div class="toolbar">
+          <button type="button" class="btn btn-ghost" id="btn-cancelar">Cancelar</button>
+          <button type="submit" class="btn">Guardar</button>
+        </div>
+      </form>
+    </div>
+  `;
+  document.body.appendChild(backdrop);
+  backdrop.addEventListener("click", (e) => { if (e.target === backdrop) backdrop.remove(); });
+  $("#btn-cancelar", backdrop).addEventListener("click", () => backdrop.remove());
+  actualizarCamposFuturo(backdrop);
+  $("[name=fecha]", backdrop).addEventListener("change", () => actualizarCamposFuturo(backdrop));
+  $("#form-sesion", backdrop).addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    await crearSesion({
+      pacienteId, fecha: fd.get("fecha"), hora: fd.get("hora"), valor: fd.get("valor"),
+      notas: fd.get("notas"), asistio: fd.get("asistio") === "on",
+    });
+    backdrop.remove();
+    onGuardado();
+  });
+}
+
+function abrirModalConsulta(sesion, pagosVinculados, onGuardado) {
+  const backdrop = document.createElement("div");
+  backdrop.className = "modal-backdrop";
+  backdrop.innerHTML = `
+    <div class="modal">
+      <h3>Consulta del ${sesion.fecha}${sesion.hora ? " " + sesion.hora : ""}</h3>
+      <form id="form-consulta">
+        <div class="grid-fecha-hora">
+          <div class="field"><label>Fecha</label><input type="date" required name="fecha" value="${sesion.fecha}" /></div>
+          <div class="field"><label>Hora</label><input type="time" name="hora" value="${sesion.hora || ""}" /></div>
+        </div>
+        <div class="field" id="campo-valor"><label>Valor</label><input type="number" required name="valor" value="${sesion.valor}" /></div>
+        <div class="field"><label>Notas</label><textarea rows="3" name="notas">${sesion.notas || ""}</textarea></div>
+        <div class="field" id="campo-asistio" style="flex-direction:row;align-items:center;gap:8px">
+          <input type="checkbox" name="asistio" ${sesion.asistio ? "checked" : ""} style="width:auto" />
+          <label style="margin:0">Asistió</label>
+        </div>
+        <p class="msg-error hidden" id="consulta-error"></p>
+        <div class="toolbar">
+          <button type="button" class="btn btn-ghost" id="btn-borrar-consulta" style="color:var(--danger);border-color:var(--danger)">Borrar consulta</button>
+          <button type="submit" class="btn">Guardar cambios</button>
+        </div>
+      </form>
+      ${pagosVinculados.length ? `
+        <div style="border-top:1px solid var(--line);margin-top:16px;padding-top:16px">
+          <label style="font-size:.8rem;color:var(--ink-soft)">Pagos registrados</label>
+          ${pagosVinculados.map(p => `
+            <div class="toolbar" style="margin:8px 0">
+              <div style="font-size:.88rem">${p.fecha} — ${money(p.monto)}${p.notas ? " · " + p.notas : ""}</div>
+              <div style="display:flex;gap:8px;flex-shrink:0">
+                <button type="button" class="btn btn-ghost btn-editar-pago" data-id="${p.id}" data-monto="${p.monto}">Editar</button>
+                <button type="button" class="btn btn-ghost btn-borrar-pago" data-id="${p.id}" style="color:var(--danger);border-color:var(--danger)">Borrar</button>
+              </div>
+            </div>
+          `).join("")}
+        </div>
+      ` : ""}
+      <button type="button" class="btn btn-ghost" id="btn-cerrar" style="width:100%;margin-top:8px">Cerrar</button>
+    </div>
+  `;
+  document.body.appendChild(backdrop);
+  backdrop.addEventListener("click", (e) => { if (e.target === backdrop) backdrop.remove(); });
+  $("#btn-cerrar", backdrop).addEventListener("click", () => backdrop.remove());
+  actualizarCamposFuturo(backdrop, { forzarAsistio: false });
+  $("[name=fecha]", backdrop).addEventListener("change", () => actualizarCamposFuturo(backdrop, { forzarAsistio: false }));
+
+  $("#form-consulta", backdrop).addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    try {
+      await actualizarSesion(sesion.id, {
+        fecha: fd.get("fecha"), hora: fd.get("hora"), valor: fd.get("valor"), notas: fd.get("notas"), asistio: fd.get("asistio") === "on",
+      });
+      backdrop.remove();
+      onGuardado();
+    } catch (err) {
+      console.error(err);
+      const errEl = $("#consulta-error", backdrop);
+      errEl.textContent = `Error al guardar: ${err.message}`;
+      errEl.classList.remove("hidden");
+    }
+  });
+
+  $("#btn-borrar-consulta", backdrop).addEventListener("click", async () => {
+    const aviso = pagosVinculados.length ? " y sus pagos vinculados" : "";
+    if (!await mostrarConfirm(`¿Borrar esta consulta${aviso}? Esta acción no se puede deshacer.`)) return;
+    await Promise.all(pagosVinculados.map(p => borrarPago(p.id)));
+    await borrarSesion(sesion.id);
+    backdrop.remove();
+    onGuardado();
+  });
+
+  backdrop.querySelectorAll(".btn-borrar-pago").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      if (!await mostrarConfirm("¿Borrar este pago?")) return;
+      await borrarPago(btn.dataset.id);
+      backdrop.remove();
+      onGuardado();
+    });
+  });
+
+  backdrop.querySelectorAll(".btn-editar-pago").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const nuevoMonto = await mostrarPrompt("Nuevo monto del pago:", btn.dataset.monto);
+      if (nuevoMonto === null) return;
+      const num = Number(nuevoMonto);
+      if (!nuevoMonto || isNaN(num)) { await mostrarAlerta("Monto inválido."); return; }
+      const otrosPagos = pagosVinculados
+        .filter(p => p.id !== btn.dataset.id)
+        .reduce((acc, p) => acc + Number(p.monto || 0), 0);
+      const maxPermitido = sesion.valor - otrosPagos;
+      if (num > maxPermitido) {
+        await mostrarAlerta(`El pago no puede ser mayor a lo pendiente de esa consulta (${money(maxPermitido)}).`);
+        return;
+      }
+      await actualizarPago(btn.dataset.id, { monto: num });
+      backdrop.remove();
+      onGuardado();
+    });
+  });
+}
+
+function abrirModalPago(pacienteId, sesiones, pagadoPorSesion, onGuardado) {
+  const hoy = hoyISO();
+  const opciones = sesiones.map(s => {
+    const pagadoSesion = pagadoPorSesion[s.id] || 0;
+    const pendiente = Math.max(s.valor - pagadoSesion, 0);
+    const etiqueta = pendiente > 0 ? `Debe ${money(pendiente)}` : "Pagada";
+    return `<option value="${s.id}" data-pendiente="${pendiente}">${s.fecha} — ${etiqueta}</option>`;
+  }).join("");
+
+  const backdrop = document.createElement("div");
+  backdrop.className = "modal-backdrop";
+  backdrop.innerHTML = `
+    <div class="modal">
+      <h3>Nuevo pago</h3>
+      <form id="form-pago">
+        <div class="field"><label>Consulta</label><select required name="sesionId" id="select-sesion">${opciones}</select></div>
+        <div class="grid-fecha-hora">
+          <div class="field"><label>Fecha</label><input type="date" required name="fecha" value="${hoy}" /></div>
+          <div class="field"><label>Monto</label><input type="number" required name="monto" id="input-monto" /></div>
+        </div>
+        <div class="field"><label>Notas</label><input name="notas" /></div>
+        <p class="msg-error hidden" id="pago-error"></p>
+        <div class="toolbar">
+          <button type="button" class="btn btn-ghost" id="btn-cancelar">Cancelar</button>
+          <button type="submit" class="btn">Guardar</button>
+        </div>
+      </form>
+    </div>
+  `;
+  document.body.appendChild(backdrop);
+  backdrop.addEventListener("click", (e) => { if (e.target === backdrop) backdrop.remove(); });
+  $("#btn-cancelar", backdrop).addEventListener("click", () => backdrop.remove());
+
+  const selectSesion = $("#select-sesion", backdrop);
+  const inputMonto = $("#input-monto", backdrop);
+  const errEl = $("#pago-error", backdrop);
+  const sugerirMonto = () => { inputMonto.value = selectSesion.selectedOptions[0].dataset.pendiente; errEl.classList.add("hidden"); };
+  sugerirMonto();
+  selectSesion.addEventListener("change", sugerirMonto);
+
+  $("#form-pago", backdrop).addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const monto = Number(fd.get("monto"));
+    const pendiente = Number(selectSesion.selectedOptions[0].dataset.pendiente);
+    if (monto > pendiente) {
+      errEl.textContent = `El pago no puede ser mayor a lo pendiente de esa consulta (${money(pendiente)}).`;
+      errEl.classList.remove("hidden");
+      return;
+    }
+    await crearPago({
+      pacienteId, sesionId: fd.get("sesionId"), fecha: fd.get("fecha"),
+      monto: fd.get("monto"), notas: fd.get("notas"),
+    });
+    backdrop.remove();
+    onGuardado();
+  });
+}
+
+// ---------- Vista: Agenda ----------
+const DIAS_SEMANA = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
+
+// Lunes de la semana (lun-dom) que contiene la fecha ISO dada.
+function lunesDeSemanaISO(fechaISO) {
+  const [y, m, d] = fechaISO.split("-").map(Number);
+  const fecha = new Date(y, m - 1, d);
+  const diaSemana = (fecha.getDay() + 6) % 7; // 0 = lunes ... 6 = domingo
+  fecha.setDate(fecha.getDate() - diaSemana);
+  const mes = String(fecha.getMonth() + 1).padStart(2, "0");
+  const dia = String(fecha.getDate()).padStart(2, "0");
+  return `${fecha.getFullYear()}-${mes}-${dia}`;
+}
+function sumarDiasISO(fechaISO, dias) {
+  const [y, m, d] = fechaISO.split("-").map(Number);
+  const fecha = new Date(y, m - 1, d);
+  fecha.setDate(fecha.getDate() + dias);
+  const mes = String(fecha.getMonth() + 1).padStart(2, "0");
+  const dia = String(fecha.getDate()).padStart(2, "0");
+  return `${fecha.getFullYear()}-${mes}-${dia}`;
+}
+function formatoDiaMes(fechaISO) {
+  const [, m, d] = fechaISO.split("-").map(Number);
+  return `${d}/${m}`;
+}
+
+async function renderAgenda() {
+  let lunes = lunesDeSemanaISO(hoyISO());
+  render(`
+    <div class="toolbar">
+      <h2>Agenda</h2>
+      <div style="display:flex;align-items:center;gap:10px">
+        <button type="button" class="btn btn-ghost" id="semana-anterior">◀</button>
+        <span id="semana-rango" style="font-weight:500;min-width:120px;text-align:center"></span>
+        <button type="button" class="btn btn-ghost" id="semana-siguiente">▶</button>
+      </div>
+    </div>
+    <div class="card" id="agenda-tabla"><p class="empty-state">Cargando...</p></div>
+  `);
+  async function cargar() {
+    const domingo = sumarDiasISO(lunes, 6);
+    $("#semana-rango").textContent = `${formatoDiaMes(lunes)} al ${formatoDiaMes(domingo)}`;
+    const cont = $("#agenda-tabla");
+    let sesiones, pacientes;
+    try {
+      [sesiones, pacientes] = await Promise.all([listarSesionesPorRango(lunes, domingo), listarPacientes()]);
+    } catch (err) {
+      console.error(err);
+      cont.innerHTML = `<p class="empty-state">Error al cargar la agenda: ${err.message}</p>`;
+      return;
+    }
+    const porId = Object.fromEntries(pacientes.map(p => [p.id, p]));
+    const porFecha = {};
+    sesiones.forEach(s => { (porFecha[s.fecha] ??= []).push(s); });
+    cont.innerHTML = DIAS_SEMANA.map((nombreDia, i) => {
+      const fecha = sumarDiasISO(lunes, i);
+      const delDia = porFecha[fecha] || [];
+      const filas = delDia.length === 0
+        ? `<p class="empty-state">Sin sesiones agendadas.</p>`
+        : `<div class="table-scroll"><table><thead><tr><th>Hora</th><th>Paciente</th><th>Notas</th><th>Valor</th></tr></thead>
+           <tbody>${delDia.map(s => {
+             const p = porId[s.pacienteId];
+             return `<tr><td>${s.hora || "—"}</td><td>${p ? p.nombre + " " + p.apellido : s.pacienteId}</td><td>${s.notas || ""}</td><td>${money(s.valor)}</td></tr>`;
+           }).join("")}</tbody></table></div>`;
+      return `<div style="margin-bottom:20px"><h3 style="font-size:1rem;margin-bottom:8px">${nombreDia} ${formatoDiaMes(fecha)}</h3>${filas}</div>`;
+    }).join("");
+  }
+  cargar();
+  $("#semana-anterior").addEventListener("click", () => { lunes = sumarDiasISO(lunes, -7); cargar(); });
+  $("#semana-siguiente").addEventListener("click", () => { lunes = sumarDiasISO(lunes, 7); cargar(); });
+}
+
+// ---------- Vista: Reportes ----------
+const SVG_EXCEL = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:6px"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>`;
+
+async function renderReportes() {
+  const hoy = hoyISO();
+  const desdeDefault = primerDiaDeMesISO();
+  render(`
+    <div class="toolbar">
+      <h2>Consultorio</h2>
+    </div>
+    <div class="toolbar">
+      <div class="tabs">
+        <button type="button" class="btn" id="tab-sesiones">Sesiones</button>
+        <button type="button" class="btn btn-ghost" id="tab-inout">IN/OUT</button>
+      </div>
+      <div id="rep-acciones"></div>
+    </div>
+    <div class="card">
+      <div class="form-grid">
+        <div class="field"><label>Desde</label><input type="date" id="rep-desde" value="${desdeDefault}" /></div>
+        <div class="field"><label>Hasta</label><input type="date" id="rep-hasta" value="${hoy}" /></div>
+      </div>
+    </div>
+    <div id="rep-resultado"><p class="empty-state">Cargando...</p></div>
+  `);
+
+  const tabSesiones = $("#tab-sesiones");
+  const tabInout = $("#tab-inout");
+  const acciones = $("#rep-acciones");
+  let tab = "sesiones";
+  let filasSesiones = [];
+  let rango = { desde: desdeDefault, hasta: hoy };
+  let rubros = [];
+
+  function marcarTab() {
+    tabSesiones.className = tab === "sesiones" ? "btn" : "btn btn-ghost";
+    tabInout.className = tab === "inout" ? "btn" : "btn btn-ghost";
+  }
+
+  async function cargarSesiones(desde, hasta, cont) {
+    acciones.innerHTML = `<button class="btn btn-ghost" id="rep-exportar" disabled>${SVG_EXCEL}Excel</button>`;
+    const btnExportar = $("#rep-exportar");
+    let sesiones, pagos, pacientes;
+    try {
+      [sesiones, pagos, pacientes] = await Promise.all([
+        listarSesionesPorRango(desde, hasta), listarPagosPorRango(desde, hasta), listarPacientes(),
+      ]);
+    } catch (err) {
+      console.error(err);
+      cont.innerHTML = `<p class="empty-state">Error al cargar el reporte: ${err.message}</p>`;
+      return;
+    }
+    const porId = Object.fromEntries(pacientes.map(p => [p.id, p]));
+    const nombreDe = pid => { const p = porId[pid]; return p ? `${p.nombre} ${p.apellido}` : pid; };
+
+    // Un solo listado, ordenado por fecha: cada fila es una consulta o un pago,
+    // con su monto en la columna que corresponde (la otra queda vacía).
+    filasSesiones = [
+      ...sesiones.map(s => ({
+        fecha: s.fecha, orden: s.hora || "", paciente: nombreDe(s.pacienteId),
+        detalle: [s.notas, s.asistio ? null : "No asistió"].filter(Boolean).join(" · "),
+        consulta: Number(s.valor || 0), pago: null,
+      })),
+      ...pagos.map(p => ({
+        fecha: p.fecha, orden: "", paciente: nombreDe(p.pacienteId),
+        detalle: p.notas || "", consulta: null, pago: Number(p.monto || 0),
+      })),
+    ].sort((a, b) => (a.fecha + a.orden).localeCompare(b.fecha + b.orden));
+
+    const totalConsultas = filasSesiones.reduce((acc, f) => acc + (f.consulta || 0), 0);
+    const totalPagos = filasSesiones.reduce((acc, f) => acc + (f.pago || 0), 0);
+
+    cont.innerHTML = filasSesiones.length === 0
+      ? `<p class="empty-state">No hay consultas ni pagos en este rango.</p>`
+      : `<div class="card"><div class="table-scroll"><table>
+          <thead><tr><th>Fecha</th><th>Paciente</th><th>Detalle</th><th>Consultas</th><th>Pagos</th></tr></thead>
+          <tbody>
+            ${filasSesiones.map(f => `
+              <tr>
+                <td>${f.fecha}</td>
+                <td>${f.paciente}</td>
+                <td>${f.detalle}</td>
+                <td>${f.consulta != null ? money(f.consulta) : "—"}</td>
+                <td>${f.pago != null ? money(f.pago) : "—"}</td>
+              </tr>
+            `).join("")}
+          </tbody>
+          <tfoot>
+            <tr style="font-weight:600">
+              <td colspan="3">Total</td>
+              <td>${money(totalConsultas)}</td>
+              <td>${money(totalPagos)}</td>
+            </tr>
+          </tfoot>
+        </table></div></div>`;
+
+    btnExportar.disabled = filasSesiones.length === 0;
+    btnExportar.addEventListener("click", () => exportarReporteXLSX(filasSesiones, rango));
+  }
+
+  async function cargarInOut(desde, hasta, cont) {
+    acciones.innerHTML = `
+      <button type="button" class="btn btn-ghost" id="btn-nuevo-rubro">+ Rubro</button>
+      <button type="button" class="btn" id="btn-nuevo-gasto">+ Gasto</button>
+    `;
+    let pagos, gastos, pacientes, rubrosData;
+    try {
+      [pagos, gastos, pacientes, rubrosData] = await Promise.all([
+        listarPagosPorRango(desde, hasta), listarGastosPorRango(desde, hasta), listarPacientes(), listarRubros(),
+      ]);
+    } catch (err) {
+      console.error(err);
+      cont.innerHTML = `<p class="empty-state">Error al cargar el reporte: ${err.message}</p>`;
+      return;
+    }
+    rubros = rubrosData;
+    const porId = Object.fromEntries(pacientes.map(p => [p.id, p]));
+    const nombreDe = pid => { const p = porId[pid]; return p ? `${p.nombre} ${p.apellido}` : pid; };
+    const rubroPorId = Object.fromEntries(rubros.map(r => [r.id, r]));
+    const nombreRubro = rid => rubroPorId[rid]?.nombre || "Sin rubro";
+
+    const movimientos = [
+      ...pagos.map(p => ({
+        id: p.id, tipo: "cobro", fecha: p.fecha, detalle: nombreDe(p.pacienteId), notas: p.notas || "",
+        entrada: Number(p.monto || 0), salida: 0,
+      })),
+      ...gastos.map(g => ({
+        id: g.id, tipo: "gasto", fecha: g.fecha, detalle: nombreRubro(g.rubroId), notas: g.notas || "",
+        entrada: 0, salida: Number(g.monto || 0),
+      })),
+    ].sort((a, b) => a.fecha.localeCompare(b.fecha));
+
+    let saldo = 0;
+    const filas = movimientos.map(m => {
+      saldo += m.entrada - m.salida;
+      return { ...m, saldo };
+    });
+    const totalEntradas = filas.reduce((acc, f) => acc + f.entrada, 0);
+    const totalSalidas = filas.reduce((acc, f) => acc + f.salida, 0);
+
+    cont.innerHTML = filas.length === 0
+      ? `<p class="empty-state">No hay cobros ni gastos en este rango.</p>`
+      : `<div class="card"><div class="table-scroll"><table>
+          <thead><tr><th>Fecha</th><th>Detalle</th><th>Notas</th><th>Entrada</th><th>Salida</th><th>Saldo</th></tr></thead>
+          <tbody>
+            ${filas.map(f => {
+              const claseSaldo = f.saldo > 0 ? "monto-positivo" : f.saldo < 0 ? "monto-negativo" : "saldo-cero";
+              return `<tr class="${f.tipo === "gasto" ? "row-link" : ""}" ${f.tipo === "gasto" ? `data-id="${f.id}"` : ""}>
+                <td>${f.fecha}</td>
+                <td>${f.detalle}</td>
+                <td>${f.notas}</td>
+                <td>${f.entrada ? money(f.entrada) : "—"}</td>
+                <td>${f.salida ? money(f.salida) : "—"}</td>
+                <td class="${claseSaldo}">${money(f.saldo)}</td>
+              </tr>`;
+            }).join("")}
+          </tbody>
+          <tfoot>
+            <tr style="font-weight:600">
+              <td colspan="3">Total</td>
+              <td>${money(totalEntradas)}</td>
+              <td>${money(totalSalidas)}</td>
+              <td>${money(totalEntradas - totalSalidas)}</td>
+            </tr>
+          </tfoot>
+        </table></div></div>`;
+
+    cont.querySelectorAll("tr.row-link[data-id]").forEach(tr => {
+      tr.addEventListener("click", async () => {
+        const gasto = gastos.find(g => g.id === tr.dataset.id);
+        if (!gasto) return;
+        const accion = await mostrarMenuAcciones(`${nombreRubro(gasto.rubroId)} · ${money(gasto.monto)}`);
+        if (accion === "editar") {
+          abrirModalGasto(rubros, () => cargar(), gasto);
+        } else if (accion === "borrar") {
+          if (!await mostrarConfirm(`¿Borrar este gasto (${nombreRubro(gasto.rubroId)} · ${money(gasto.monto)})?`)) return;
+          await borrarGasto(gasto.id);
+          cargar();
+        }
+      });
+    });
+  }
+
+  async function cargar() {
+    const desde = $("#rep-desde").value;
+    const hasta = $("#rep-hasta").value;
+    const cont = $("#rep-resultado");
+    if (!desde || !hasta) return;
+    if (desde > hasta) {
+      acciones.innerHTML = "";
+      cont.innerHTML = `<p class="empty-state">El rango de fechas es inválido.</p>`;
+      return;
+    }
+    rango = { desde, hasta };
+    marcarTab();
+    cont.innerHTML = `<p class="empty-state">Cargando...</p>`;
+    if (tab === "sesiones") await cargarSesiones(desde, hasta, cont);
+    else await cargarInOut(desde, hasta, cont);
+  }
+
+  tabSesiones.addEventListener("click", () => { tab = "sesiones"; cargar(); });
+  tabInout.addEventListener("click", () => { tab = "inout"; cargar(); });
+  $("#rep-desde").addEventListener("change", cargar);
+  $("#rep-hasta").addEventListener("change", cargar);
+  acciones.addEventListener("click", async (e) => {
+    if (e.target.id === "btn-nuevo-rubro") abrirModalRubro(() => cargar());
+    if (e.target.id === "btn-nuevo-gasto") {
+      if (rubros.length === 0) { await mostrarAlerta("Primero creá un rubro de gastos."); return; }
+      abrirModalGasto(rubros, () => cargar());
+    }
+  });
+  cargar();
+}
+
+// ---------- Vista: Mis Finanzas ----------
+// Mismo formato "IN/OUT" que Consultorio, pero con un solo listado de movimientos
+// (sin sesiones) y rubros que definen si son un ingreso o un gasto.
+async function renderMisFinanzas() {
+  const hoy = hoyISO();
+  const desdeDefault = primerDiaDeMesISO();
+  render(`
+    <div class="toolbar">
+      <h2>Mis Finanzas</h2>
+      <div id="mf-acciones">
+        <button type="button" class="btn btn-ghost" id="btn-centros-costo">Centros de Costo</button>
+        <button type="button" class="btn btn-ghost" id="btn-nuevo-rubro-mf">+ Rubro</button>
+        <button type="button" class="btn" id="btn-nuevo-movimiento">+ Movimiento</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="form-grid">
+        <div class="field"><label>Desde</label><input type="date" id="mf-desde" value="${desdeDefault}" /></div>
+        <div class="field"><label>Hasta</label><input type="date" id="mf-hasta" value="${hoy}" /></div>
+        <div class="field"><label>Centro de Costo</label><select id="mf-centro-costo"><option value="">Todos</option></select></div>
+      </div>
+    </div>
+    <div id="mf-resultado"><p class="empty-state">Cargando...</p></div>
+  `);
+
+  const acciones = $("#mf-acciones");
+  const selectCentroCosto = $("#mf-centro-costo");
+  let rubros = [];
+  let centrosCosto = [];
+  let movimientos = [];
+
+  async function cargar() {
+    const desde = $("#mf-desde").value;
+    const hasta = $("#mf-hasta").value;
+    const centroCostoId = selectCentroCosto.value;
+    const cont = $("#mf-resultado");
+    if (!desde || !hasta) return;
+    if (desde > hasta) {
+      cont.innerHTML = `<p class="empty-state">El rango de fechas es inválido.</p>`;
+      return;
+    }
+    cont.innerHTML = `<p class="empty-state">Cargando...</p>`;
+    let rubrosData, centrosCostoData;
+    try {
+      [movimientos, rubrosData, centrosCostoData] = await Promise.all([
+        listarMovimientosPorRango(desde, hasta), listarRubrosPersonales(), listarCentrosCosto(),
+      ]);
+    } catch (err) {
+      console.error(err);
+      cont.innerHTML = `<p class="empty-state">Error al cargar: ${err.message}</p>`;
+      return;
+    }
+    rubros = rubrosData;
+    centrosCosto = centrosCostoData;
+    const valorPrevio = selectCentroCosto.value;
+    selectCentroCosto.innerHTML = `<option value="">Todos</option>${centrosCosto.map(c => `<option value="${c.id}">${c.nombre}</option>`).join("")}`;
+    selectCentroCosto.value = valorPrevio;
+
+    const rubroPorId = Object.fromEntries(rubros.map(r => [r.id, r]));
+    const nombreRubro = rid => rubroPorId[rid]?.nombre || "Sin rubro";
+    const tipoRubro = rid => rubroPorId[rid]?.tipo || "gasto";
+    const centroCostoPorId = Object.fromEntries(centrosCosto.map(c => [c.id, c]));
+    const nombreCentroCosto = cid => centroCostoPorId[cid]?.nombre || "Sin centro de costo";
+
+    const movimientosFiltrados = centroCostoId ? movimientos.filter(m => m.centroCostoId === centroCostoId) : movimientos;
+
+    let saldo = 0;
+    const filas = [...movimientosFiltrados].sort((a, b) => a.fecha.localeCompare(b.fecha)).map(m => {
+      const entrada = tipoRubro(m.rubroId) === "ingreso" ? Number(m.monto || 0) : 0;
+      const salida = tipoRubro(m.rubroId) === "gasto" ? Number(m.monto || 0) : 0;
+      saldo += entrada - salida;
+      return { ...m, entrada, salida, saldo };
+    });
+    const totalEntradas = filas.reduce((acc, f) => acc + f.entrada, 0);
+    const totalSalidas = filas.reduce((acc, f) => acc + f.salida, 0);
+
+    cont.innerHTML = filas.length === 0
+      ? `<p class="empty-state">No hay movimientos en este rango.</p>`
+      : `<div class="card"><div class="table-scroll"><table>
+          <thead><tr><th>Fecha</th><th>Rubro</th><th>Centro de Costo</th><th>Notas</th><th>Entrada</th><th>Salida</th><th>Saldo</th></tr></thead>
+          <tbody>
+            ${filas.map(f => {
+              const claseSaldo = f.saldo > 0 ? "monto-positivo" : f.saldo < 0 ? "monto-negativo" : "saldo-cero";
+              return `<tr class="row-link" data-id="${f.id}">
+                <td>${f.fecha}</td>
+                <td>${nombreRubro(f.rubroId)}</td>
+                <td>${nombreCentroCosto(f.centroCostoId)}</td>
+                <td>${f.notas}</td>
+                <td>${f.entrada ? money(f.entrada) : "—"}</td>
+                <td>${f.salida ? money(f.salida) : "—"}</td>
+                <td class="${claseSaldo}">${money(f.saldo)}</td>
+              </tr>`;
+            }).join("")}
+          </tbody>
+          <tfoot>
+            <tr style="font-weight:600">
+              <td colspan="4">Total</td>
+              <td>${money(totalEntradas)}</td>
+              <td>${money(totalSalidas)}</td>
+              <td>${money(totalEntradas - totalSalidas)}</td>
+            </tr>
+          </tfoot>
+        </table></div></div>`;
+
+    cont.querySelectorAll("tr.row-link[data-id]").forEach(tr => {
+      tr.addEventListener("click", async () => {
+        const mov = movimientos.find(m => m.id === tr.dataset.id);
+        if (!mov) return;
+        const accion = await mostrarMenuAcciones(`${nombreRubro(mov.rubroId)} · ${money(mov.monto)}`);
+        if (accion === "editar") {
+          abrirModalMovimiento(rubros, centrosCosto, () => cargar(), mov);
+        } else if (accion === "borrar") {
+          if (!await mostrarConfirm(`¿Borrar este movimiento (${nombreRubro(mov.rubroId)} · ${money(mov.monto)})?`)) return;
+          await borrarMovimiento(mov.id);
+          cargar();
+        }
+      });
+    });
+  }
+
+  $("#mf-desde").addEventListener("change", cargar);
+  $("#mf-hasta").addEventListener("change", cargar);
+  selectCentroCosto.addEventListener("change", cargar);
+  acciones.addEventListener("click", async (e) => {
+    if (e.target.id === "btn-centros-costo") abrirModalCentrosCosto(centrosCosto, () => cargar());
+    if (e.target.id === "btn-nuevo-rubro-mf") abrirModalRubroPersonal(() => cargar());
+    if (e.target.id === "btn-nuevo-movimiento") {
+      if (rubros.length === 0) { await mostrarAlerta("Primero creá un rubro."); return; }
+      abrirModalMovimiento(rubros, centrosCosto, () => cargar());
+    }
+  });
+  cargar();
+}
+
+function abrirModalRubroPersonal(onGuardado) {
+  const backdrop = document.createElement("div");
+  backdrop.className = "modal-backdrop";
+  backdrop.innerHTML = `
+    <div class="modal">
+      <h3>Nuevo rubro</h3>
+      <form id="form-rubro-mf">
+        <div class="field"><label>Nombre</label><input required name="nombre" autofocus /></div>
+        <div class="field"><label>Tipo</label>
+          <select required name="tipo">
+            <option value="gasto">Gasto</option>
+            <option value="ingreso">Ingreso</option>
+          </select>
+        </div>
+        <div class="toolbar">
+          <button type="button" class="btn btn-ghost" id="btn-cancelar">Cancelar</button>
+          <button type="submit" class="btn">Guardar</button>
+        </div>
+      </form>
+    </div>
+  `;
+  document.body.appendChild(backdrop);
+  backdrop.addEventListener("click", (e) => { if (e.target === backdrop) backdrop.remove(); });
+  $("#btn-cancelar", backdrop).addEventListener("click", () => backdrop.remove());
+  $("#form-rubro-mf", backdrop).addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    await crearRubroPersonal({ nombre: fd.get("nombre"), tipo: fd.get("tipo") });
+    backdrop.remove();
+    onGuardado();
+  });
+}
+
+// Modal de gestión de Centros de Costo: alta rápida arriba, y debajo la lista con
+// Editar/Borrar por fila (mismo patrón que los pagos vinculados a una consulta).
+function abrirModalCentrosCosto(centrosCostoIniciales, onGuardado) {
+  let centrosCosto = centrosCostoIniciales;
+  const backdrop = document.createElement("div");
+  backdrop.className = "modal-backdrop";
+  backdrop.innerHTML = `
+    <div class="modal">
+      <h3>Centros de Costo</h3>
+      <form id="form-centro-costo-nuevo" style="display:flex;gap:8px;align-items:flex-end;margin-bottom:16px">
+        <div class="field" style="flex:1;margin-bottom:0"><label>Nombre</label><input required name="nombre" autofocus /></div>
+        <button type="submit" class="btn">Agregar</button>
+      </form>
+      <div id="lista-centros-costo"></div>
+      <button type="button" class="btn btn-ghost" id="btn-cerrar" style="width:100%;margin-top:8px">Cerrar</button>
+    </div>
+  `;
+  document.body.appendChild(backdrop);
+  backdrop.addEventListener("click", (e) => { if (e.target === backdrop) backdrop.remove(); });
+  $("#btn-cerrar", backdrop).addEventListener("click", () => backdrop.remove());
+
+  const lista = $("#lista-centros-costo", backdrop);
+
+  function renderLista() {
+    lista.innerHTML = centrosCosto.length === 0
+      ? `<p class="empty-state">Todavía no hay centros de costo.</p>`
+      : centrosCosto.map(c => `
+        <div class="toolbar" style="margin:8px 0">
+          <div style="font-size:.88rem">${c.nombre}</div>
+          <div style="display:flex;gap:8px;flex-shrink:0">
+            <button type="button" class="btn btn-ghost btn-editar-centro" data-id="${c.id}">Editar</button>
+            <button type="button" class="btn btn-ghost btn-borrar-centro" data-id="${c.id}" style="color:var(--danger);border-color:var(--danger)">Borrar</button>
+          </div>
+        </div>
+      `).join("");
+
+    lista.querySelectorAll(".btn-editar-centro").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        const centro = centrosCosto.find(c => c.id === btn.dataset.id);
+        const nuevoNombre = await mostrarPrompt("Nuevo nombre del centro de costo:", centro.nombre, "text");
+        if (nuevoNombre === null) return;
+        if (!nuevoNombre.trim()) { await mostrarAlerta("El nombre no puede quedar vacío."); return; }
+        await actualizarCentroCosto(centro.id, { nombre: nuevoNombre.trim() });
+        centrosCosto = await listarCentrosCosto();
+        renderLista();
+        onGuardado();
+      });
+    });
+    lista.querySelectorAll(".btn-borrar-centro").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        const centro = centrosCosto.find(c => c.id === btn.dataset.id);
+        if (!await mostrarConfirm(`¿Borrar el centro de costo "${centro.nombre}"? Los movimientos que lo tenían asignado quedarán sin centro de costo.`)) return;
+        await borrarCentroCosto(centro.id);
+        centrosCosto = await listarCentrosCosto();
+        renderLista();
+        onGuardado();
+      });
+    });
+  }
+  renderLista();
+
+  $("#form-centro-costo-nuevo", backdrop).addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    await crearCentroCosto({ nombre: fd.get("nombre") });
+    e.target.reset();
+    centrosCosto = await listarCentrosCosto();
+    renderLista();
+    onGuardado();
+  });
+}
+
+function abrirModalMovimiento(rubros, centrosCosto, onGuardado, movimientoExistente) {
+  const esEdicion = !!movimientoExistente;
+  const m = movimientoExistente || {};
+  const hoy = hoyISO();
+  const opciones = rubros.map(r => `<option value="${r.id}" ${r.id === m.rubroId ? "selected" : ""}>${r.nombre} (${r.tipo === "ingreso" ? "Ingreso" : "Gasto"})</option>`).join("");
+  const opcionesCentroCosto = centrosCosto.map(c => `<option value="${c.id}" ${c.id === m.centroCostoId ? "selected" : ""}>${c.nombre}</option>`).join("");
+  const backdrop = document.createElement("div");
+  backdrop.className = "modal-backdrop";
+  backdrop.innerHTML = `
+    <div class="modal">
+      <h3>${esEdicion ? "Editar movimiento" : "Nuevo movimiento"}</h3>
+      <form id="form-movimiento">
+        <div class="field"><label>Rubro</label><select required name="rubroId">${opciones}</select></div>
+        <div class="grid-fecha-hora">
+          <div class="field"><label>Fecha</label><input type="date" required name="fecha" value="${m.fecha || hoy}" /></div>
+          <div class="field"><label>Monto</label><input type="number" required name="monto" value="${m.monto ?? ""}" /></div>
+        </div>
+        <div class="field"><label>Centro de Costo</label><select name="centroCostoId"><option value="">Sin centro de costo</option>${opcionesCentroCosto}</select></div>
+        <div class="field"><label>Notas</label><input name="notas" value="${m.notas || ""}" /></div>
+        <div class="toolbar">
+          <button type="button" class="btn btn-ghost" id="btn-cancelar">Cancelar</button>
+          <button type="submit" class="btn">Guardar</button>
+        </div>
+      </form>
+    </div>
+  `;
+  document.body.appendChild(backdrop);
+  backdrop.addEventListener("click", (e) => { if (e.target === backdrop) backdrop.remove(); });
+  $("#btn-cancelar", backdrop).addEventListener("click", () => backdrop.remove());
+  $("#form-movimiento", backdrop).addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const data = { rubroId: fd.get("rubroId"), fecha: fd.get("fecha"), monto: fd.get("monto"), notas: fd.get("notas"), centroCostoId: fd.get("centroCostoId") };
+    if (esEdicion) await actualizarMovimiento(movimientoExistente.id, data);
+    else await crearMovimiento(data);
+    backdrop.remove();
+    onGuardado();
+  });
+}
+
+function abrirModalRubro(onGuardado) {
+  const backdrop = document.createElement("div");
+  backdrop.className = "modal-backdrop";
+  backdrop.innerHTML = `
+    <div class="modal">
+      <h3>Nuevo rubro</h3>
+      <form id="form-rubro">
+        <div class="field"><label>Nombre</label><input required name="nombre" autofocus /></div>
+        <div class="toolbar">
+          <button type="button" class="btn btn-ghost" id="btn-cancelar">Cancelar</button>
+          <button type="submit" class="btn">Guardar</button>
+        </div>
+      </form>
+    </div>
+  `;
+  document.body.appendChild(backdrop);
+  backdrop.addEventListener("click", (e) => { if (e.target === backdrop) backdrop.remove(); });
+  $("#btn-cancelar", backdrop).addEventListener("click", () => backdrop.remove());
+  $("#form-rubro", backdrop).addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    await crearRubro({ nombre: fd.get("nombre") });
+    backdrop.remove();
+    onGuardado();
+  });
+}
+
+function abrirModalGasto(rubros, onGuardado, gastoExistente) {
+  const esEdicion = !!gastoExistente;
+  const g = gastoExistente || {};
+  const hoy = hoyISO();
+  const opciones = rubros.map(r => `<option value="${r.id}" ${r.id === g.rubroId ? "selected" : ""}>${r.nombre}</option>`).join("");
+  const backdrop = document.createElement("div");
+  backdrop.className = "modal-backdrop";
+  backdrop.innerHTML = `
+    <div class="modal">
+      <h3>${esEdicion ? "Editar gasto" : "Nuevo gasto"}</h3>
+      <form id="form-gasto">
+        <div class="field"><label>Rubro</label><select required name="rubroId">${opciones}</select></div>
+        <div class="grid-fecha-hora">
+          <div class="field"><label>Fecha</label><input type="date" required name="fecha" value="${g.fecha || hoy}" /></div>
+          <div class="field"><label>Monto</label><input type="number" required name="monto" value="${g.monto ?? ""}" /></div>
+        </div>
+        <div class="field"><label>Notas</label><input name="notas" value="${g.notas || ""}" /></div>
+        <div class="toolbar">
+          <button type="button" class="btn btn-ghost" id="btn-cancelar">Cancelar</button>
+          <button type="submit" class="btn">Guardar</button>
+        </div>
+      </form>
+    </div>
+  `;
+  document.body.appendChild(backdrop);
+  backdrop.addEventListener("click", (e) => { if (e.target === backdrop) backdrop.remove(); });
+  $("#btn-cancelar", backdrop).addEventListener("click", () => backdrop.remove());
+  $("#form-gasto", backdrop).addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const data = { rubroId: fd.get("rubroId"), fecha: fd.get("fecha"), monto: fd.get("monto"), notas: fd.get("notas") };
+    if (esEdicion) await actualizarGasto(gastoExistente.id, data);
+    else await crearGasto(data);
+    backdrop.remove();
+    onGuardado();
+  });
+}
+
+async function exportarReporteXLSX(filas, rango) {
+  const totalConsultas = filas.reduce((acc, f) => acc + (f.consulta || 0), 0);
+  const totalPagos = filas.reduce((acc, f) => acc + (f.pago || 0), 0);
+
+  const libro = new ExcelJS.Workbook();
+  const hoja = libro.addWorksheet("Reporte");
+  hoja.columns = [
+    { header: "Fecha", key: "fecha", width: 12 },
+    { header: "Paciente", key: "paciente", width: 24 },
+    { header: "Detalle", key: "detalle", width: 30 },
+    { header: "Consultas", key: "consulta", width: 14 },
+    { header: "Pagos", key: "pago", width: 14 },
+  ];
+  hoja.getRow(1).eachCell(celda => {
+    celda.font = { bold: true, color: { argb: "FFFFFFFF" } };
+    celda.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFB8577C" } };
+  });
+  hoja.getColumn("consulta").numFmt = "#,##0";
+  hoja.getColumn("pago").numFmt = "#,##0";
+
+  filas.forEach(f => hoja.addRow({
+    fecha: f.fecha, paciente: f.paciente, detalle: f.detalle,
+    consulta: f.consulta ?? undefined, pago: f.pago ?? undefined,
+  }));
+  const filaTotal = hoja.addRow({ fecha: "Total", consulta: totalConsultas, pago: totalPagos });
+  filaTotal.font = { bold: true };
+  hoja.mergeCells(`A${filaTotal.number}:C${filaTotal.number}`);
+
+  const buffer = await libro.xlsx.writeBuffer();
+  const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `reporte_${rango.desde}_a_${rango.hasta}.xlsx`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+</script>
+</body>
+</html>

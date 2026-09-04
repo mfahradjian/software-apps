@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TalleresApp — Gestión de talleres</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/exceljs@4.3.0/dist/exceljs.min.js"></script>
+<style>
+:root {
+  --bg:#110f16;--bg2:#181520;--bg3:#201c2c;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);
+  --text:#ece8f5;--text2:#8b82a8;--text3:#524968;
+  --accent:#a78bfa;--accent2:#7c5cf6;
+  --green:#2ecc8a;--green-bg:rgba(46,204,138,0.1);
+  --red:#ff5c6b;--red-bg:rgba(255,92,107,0.1);
+  --yellow:#f5c842;--yellow-bg:rgba(245,200,66,0.1);
+  --blue-bg:rgba(167,139,250,0.12);
+  --radius:10px;--radius-lg:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;}
+.app{display:flex;min-height:100vh;}
+.sidebar{width:220px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:50;}
+.main{margin-left:220px;flex:1;padding:28px;max-width:1200px;}
+.logo{padding:24px 20px 20px;border-bottom:1px solid var(--border);}
+.logo-mark{font-size:18px;font-weight:600;letter-spacing:-0.3px;}
+.logo-mark span{color:var(--accent);}
+.logo-sub{font-size:11px;color:var(--text3);margin-top:3px;font-family:'DM Mono',monospace;}
+nav{padding:12px 10px;flex:1;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:var(--radius);cursor:pointer;color:var(--text2);font-size:13px;margin-bottom:2px;transition:all 0.15s;border:1px solid transparent;}
+.nav-item:hover{background:var(--bg3);color:var(--text);}
+.nav-item.active{background:var(--blue-bg);color:var(--accent);border-color:rgba(108,140,255,0.2);font-weight:500;}
+.nav-icon{width:16px;text-align:center;font-size:15px;}
+.sync-status{display:flex;align-items:center;gap:6px;padding:8px 16px;font-size:11px;font-family:'DM Mono',monospace;color:var(--text3);}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:var(--text3);flex-shrink:0;}
+.sync-dot.online{background:var(--green);box-shadow:0 0 6px rgba(46,204,138,0.5);}
+.sync-dot.syncing{background:var(--yellow);animation:pulse 1s infinite;}
+.sync-dot.error{background:var(--red);}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+.sidebar-footer{padding:12px 16px;border-top:1px solid var(--border);font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;}
+.page{display:none;}.page.active{display:block;}
+.page-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px;}
+.page-title{font-size:22px;font-weight:600;letter-spacing:-0.4px;}
+.page-sub{font-size:13px;color:var(--text2);margin-top:4px;}
+.stats-row{display:grid;gap:14px;margin-bottom:24px;}
+.stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px 18px;}
+.stat-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;font-family:'DM Mono',monospace;}
+.stat-value{font-size:28px;font-weight:600;margin:6px 0 2px;letter-spacing:-0.5px;}
+.stat-sub{font-size:12px;color:var(--text2);}
+.stat-green .stat-value{color:var(--green);}
+.stat-blue .stat-value{color:var(--accent);}
+.stat-yellow .stat-value{color:var(--yellow);}
+.btn{display:inline-flex;align-items:center;gap:7px;padding:8px 16px;border-radius:var(--radius);border:1px solid var(--border2);background:transparent;color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;cursor:pointer;font-weight:500;transition:all 0.15s;}
+.btn:hover{background:var(--bg3);}.btn:disabled{opacity:0.4;cursor:not-allowed;}
+.btn-primary{background:var(--accent2);border-color:transparent;color:#fff;}
+.btn-primary:hover{background:var(--accent);}
+.btn-danger{border-color:rgba(255,92,107,0.3);color:var(--red);}
+.btn-danger:hover{background:var(--red-bg);}
+.btn-sm{padding:5px 11px;font-size:12px;}
+.table-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;}
+.table-toolbar{padding:14px 18px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border);flex-wrap:wrap;}
+.search-input{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:7px 12px;color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;width:220px;}
+.search-input:focus{outline:none;border-color:var(--accent);}
+.search-input::placeholder{color:var(--text3);}
+.filter-select{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:7px 12px;color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;cursor:pointer;}
+.filter-select:focus{outline:none;border-color:var(--accent);}
+table{width:100%;border-collapse:collapse;}
+th{padding:11px 16px;text-align:left;font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.07em;font-family:'DM Mono',monospace;font-weight:400;border-bottom:1px solid var(--border);}
+td{padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;color:var(--text);vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:rgba(255,255,255,0.02);}
+.actions{display:flex;gap:6px;}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:200;align-items:center;justify-content:center;padding:20px;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);width:100%;max-width:500px;max-height:90vh;overflow-y:auto;display:flex;flex-direction:column;}
+.modal-header{padding:20px 24px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.modal-title{font-size:16px;font-weight:600;}
+.modal-close{background:none;border:none;color:var(--text3);cursor:pointer;font-size:20px;line-height:1;}
+.modal-close:hover{color:var(--text);}
+.modal-body{padding:20px 24px;overflow-y:auto;flex:1;}
+.modal-footer{padding:16px 24px;border-top:1px solid var(--border);display:flex;gap:10px;justify-content:flex-end;flex-shrink:0;position:sticky;bottom:0;background:var(--bg2);}
+.form-group{margin-bottom:16px;}
+.form-label{font-size:12px;color:var(--text2);display:block;margin-bottom:6px;font-weight:500;}
+.form-input{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:9px 12px;color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;transition:border-color 0.15s;}
+.form-input:focus{outline:none;border-color:var(--accent);}
+.form-input::placeholder{color:var(--text3);}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.toast{position:fixed;bottom:24px;right:24px;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius);padding:12px 18px;font-size:13px;color:var(--text);z-index:999;opacity:0;transform:translateY(10px);transition:all 0.25s;pointer-events:none;max-width:320px;}
+.toast.show{opacity:1;transform:translateY(0);}
+.toast.success{border-color:rgba(46,204,138,0.4);}
+.toast.error{border-color:rgba(255,92,107,0.4);}
+.empty-state{padding:48px;text-align:center;color:var(--text3);}
+.empty-icon{font-size:40px;margin-bottom:12px;}
+.loading-screen{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:1000;gap:16px;}
+.spinner{width:32px;height:32px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+@media(max-width:768px){
+  .sidebar{display:none;}
+  .main{margin-left:0;padding:12px;padding-bottom:80px;}
+  .app{flex-direction:column;}
+  .stats-row{grid-template-columns:1fr 1fr !important;}
+  .form-row{grid-template-columns:1fr;}
+  .page-header{flex-direction:column;align-items:flex-start;}
+  .page-header>div:last-child{display:flex;flex-wrap:wrap;gap:6px;}
+  .mobile-nav{display:flex !important;}
+  table{font-size:12px;}
+  th,td{padding:8px 10px;}
+  .table-toolbar{gap:8px;}
+  .search-input{width:100%;font-size:16px !important;}
+  input[type="text"],input[type="number"],textarea{font-size:16px !important;}
+  input[type="date"]{-webkit-appearance:none;appearance:none;width:100%;}
+  .modal-overlay{align-items:flex-end;padding:0;}
+  .modal{max-width:100%;max-height:85vh;border-radius:var(--radius-lg) var(--radius-lg) 0 0;}
+  .modal-footer .btn{flex:1;justify-content:center;padding:12px;font-size:14px;}
+  .actions{flex-wrap:wrap;}
+  .sections{grid-template-columns:1fr !important;}
+}
+.mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--bg2);border-top:1px solid var(--border);z-index:100;padding:0;height:62px;}
+.mobile-nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;color:var(--text3);font-size:10px;font-family:'DM Mono',monospace;padding:8px 2px;transition:color 0.15s;border:none;background:none;}
+.mobile-nav-item.active{color:var(--accent);}
+.mobile-nav-item .mnav-icon{font-size:18px;line-height:1;}
+</style>
+</head>
+<body>
+
+<div class="loading-screen" id="loading-screen">
+  <div class="spinner" id="loading-spinner"></div>
+  <div id="loading-msg" style="font-size:13px;color:var(--text2);font-family:'DM Mono',monospace;">Conectando con la nube...</div>
+</div>
+
+<div class="app" id="app" style="display:none;">
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-mark">Talleres<span>App</span></div>
+      <div class="logo-sub">Gestión de talleres</div>
+    </div>
+    <nav>
+      <div class="nav-item active" onclick="showPage('dashboard')"><span class="nav-icon">⊞</span> Dashboard</div>
+      <div class="nav-item" onclick="showPage('talleres')"><span class="nav-icon">◈</span> Talleres</div>
+      <div class="nav-item" onclick="showPage('reportes')"><span class="nav-icon">≡</span> Reportes</div>
+      <div class="nav-item" onclick="showPage('config')"><span class="nav-icon">⚙</span> Configuración</div>
+    </nav>
+    <div class="sync-status"><div class="sync-dot" id="sync-dot"></div><span id="sync-text">Conectando...</span></div>
+    <div class="sidebar-footer" id="clock"></div>
+  </aside>
+
+  <main class="main">
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="page-header">
+        <div><div class="page-title">Dashboard</div><div class="page-sub" id="dash-fecha"></div></div>
+        <button class="btn btn-primary" onclick="abrirModalTaller()">+ Nuevo taller</button>
+      </div>
+      <div class="stats-row" style="grid-template-columns:repeat(4,1fr);">
+        <div class="stat-card stat-blue"><div class="stat-label">Total talleres</div><div class="stat-value" id="st-talleres">0</div><div class="stat-sub">registrados</div></div>
+        <div class="stat-card stat-green"><div class="stat-label">Total asistentes</div><div class="stat-value" id="st-asistentes">0</div><div class="stat-sub">personas</div></div>
+        <div class="stat-card stat-yellow"><div class="stat-label">Lugares</div><div class="stat-value" id="st-lugares">0</div><div class="stat-sub">únicos</div></div>
+        <div class="stat-card"><div class="stat-label">Promedio</div><div class="stat-value" id="st-promedio">0</div><div class="stat-sub">asistentes/taller</div></div>
+      </div>
+      <div class="table-wrap">
+        <div class="table-toolbar">
+          <span style="font-size:13px;font-weight:500;color:var(--text2);">Últimos talleres</span>
+          <button class="btn btn-sm" onclick="showPage('talleres')" style="margin-left:auto;">Ver todos →</button>
+        </div>
+        <table>
+          <thead><tr><th>Fecha</th><th>Lugar</th><th>Tema</th><th style="text-align:center;">Asistentes</th></tr></thead>
+          <tbody id="dash-tabla"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TALLERES -->
+    <div class="page" id="page-talleres">
+      <div class="page-header">
+        <div><div class="page-title">Talleres</div><div class="page-sub" id="talleres-sub"></div></div>
+        <button class="btn btn-primary" onclick="abrirModalTaller()">+ Nuevo taller</button>
+      </div>
+      <div class="table-wrap">
+        <div class="table-toolbar">
+          <input class="search-input" type="text" placeholder="Buscar lugar o tema..." id="search-talleres" oninput="renderTalleres()">
+          <select class="filter-select" id="filtro-lugar" onchange="renderTalleres()">
+            <option value="">Todos los lugares</option>
+          </select>
+          <select class="filter-select" id="filtro-anio" onchange="renderTalleres()">
+            <option value="">Todos los años</option>
+          </select>
+        </div>
+        <table id="tabla-talleres-wrap">
+          <thead>
+            <tr><th>Fecha</th><th>Lugar</th><th>Tema</th><th style="text-align:center;">Asistentes</th><th>Observaciones</th><th></th></tr>
+          </thead>
+          <tbody id="tabla-talleres"></tbody>
+        </table>
+        <div id="talleres-empty" class="empty-state" style="display:none;">
+          <div class="empty-icon">◈</div>
+          <div class="empty-text">No hay talleres registrados</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- REPORTES -->
+    <div class="page" id="page-reportes">
+      <div class="page-header">
+        <div><div class="page-title">Reportes</div><div class="page-sub">Historial con filtros</div></div>
+        <button class="btn" onclick="exportarExcel()">↓ Exportar Excel</button>
+      </div>
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px 16px;margin-bottom:20px;">
+        <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;">
+          <div style="flex:1.2;min-width:140px;"><label class="form-label">Desde</label><input class="form-input" type="date" id="rep-desde"></div>
+          <div style="flex:1.2;min-width:140px;"><label class="form-label">Hasta</label><input class="form-input" type="date" id="rep-hasta"></div>
+          <div style="flex:2;min-width:160px;"><label class="form-label">Lugar</label><select class="form-input" id="rep-lugar"><option value="">Todos</option></select></div>
+          <div style="display:flex;gap:6px;flex-shrink:0;align-self:flex-end;">
+            <button class="btn btn-primary" onclick="renderReportes()">Filtrar</button>
+            <button class="btn" onclick="limpiarReportes()" title="Limpiar">✕</button>
+          </div>
+        </div>
+      </div>
+      <div id="rep-resumen" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:20px;"></div>
+      <div class="table-wrap">
+        <table id="rep-tabla-wrap">
+          <thead>
+            <tr><th>Fecha</th><th>Lugar</th><th>Tema</th><th style="text-align:center;">Asistentes</th><th>Observaciones</th></tr>
+          </thead>
+          <tbody id="rep-tabla"></tbody>
+        </table>
+        <div id="rep-empty" class="empty-state">
+          <div class="empty-icon">≡</div>
+          <div class="empty-text" id="rep-empty-text">Seleccioná los filtros y presioná Filtrar para ver los resultados</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONFIGURACIÓN -->
+    <div class="page" id="page-config">
+      <div class="page-header">
+        <div><div class="page-title">Configuración</div><div class="page-sub">Administrá los catálogos de talleres y lugares</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;" class="sections">
+
+        <!-- Talleres / Charlas -->
+        <div class="table-wrap">
+          <div class="table-toolbar" style="justify-content:space-between;">
+            <span style="font-size:13px;font-weight:500;color:var(--text2);">Talleres / Charlas</span>
+            <button class="btn btn-sm btn-primary" onclick="abrirModalConfigItem('tema')">+ Agregar</button>
+          </div>
+          <div id="lista-config-temas"></div>
+        </div>
+
+        <!-- Lugares -->
+        <div class="table-wrap">
+          <div class="table-toolbar" style="justify-content:space-between;">
+            <span style="font-size:13px;font-weight:500;color:var(--text2);">Lugares</span>
+            <button class="btn btn-sm btn-primary" onclick="abrirModalConfigItem('lugar')">+ Agregar</button>
+          </div>
+          <div id="lista-config-lugares"></div>
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- MODAL TALLER -->
+<div class="modal-overlay" id="modal-taller">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-taller-title">Nuevo taller</div>
+      <button class="modal-close" onclick="cerrarModal('modal-taller')">×</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="edit-id">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Fecha *</label>
+          <input class="form-input" type="date" id="inp-fecha">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Asistentes</label>
+          <input class="form-input" type="number" id="inp-asistentes" placeholder="0" min="0">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Lugar *</label>
+        <select class="form-input" id="inp-lugar"><option value="">— Seleccioná un lugar —</option></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Taller / Charla *</label>
+        <select class="form-input" id="inp-tema"><option value="">— Seleccioná un taller —</option></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Observaciones</label>
+        <textarea class="form-input" id="inp-obs" rows="3" placeholder="Notas opcionales..." style="resize:vertical;"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-danger" id="btn-eliminar-taller" style="display:none;margin-right:auto;" onclick="eliminarTallerDesdeModal()">Eliminar</button>
+      <button class="btn" onclick="cerrarModal('modal-taller')">Cancelar</button>
+      <button class="btn btn-primary" id="btn-guardar" onclick="guardarTaller()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL ITEM CONFIGURACIÓN -->
+<div class="modal-overlay" id="modal-config-item">
+  <div class="modal" style="max-width:400px;">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-config-title">Nuevo ítem</div>
+      <button class="modal-close" onclick="cerrarModal('modal-config-item')">×</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="config-item-tipo">
+      <input type="hidden" id="config-item-id">
+      <div class="form-group">
+        <label class="form-label" id="config-item-label">Nombre *</label>
+        <input class="form-input" type="text" id="config-item-nombre" placeholder="">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-danger" id="btn-eliminar-config" style="display:none;margin-right:auto;" onclick="eliminarConfigItemDesdeModal()">Eliminar</button>
+      <button class="btn" onclick="cerrarModal('modal-config-item')">Cancelar</button>
+      <button class="btn btn-primary" id="btn-guardar-config" onclick="guardarConfigItem()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-confirm">
+  <div class="modal" style="max-width:360px;">
+    <div class="modal-body" style="padding-top:28px;text-align:center;">
+      <div id="confirm-msg" style="font-size:15px;color:var(--text1);margin-bottom:24px;"></div>
+      <div style="display:flex;gap:10px;justify-content:center;">
+        <button class="btn" id="confirm-cancel-btn">Cancelar</button>
+        <button class="btn btn-danger" id="confirm-ok-btn">Eliminar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- NAVEGACIÓN MÓVIL -->
+<nav class="mobile-nav">
+  <button class="mobile-nav-item active" id="mn-dashboard" onclick="showPage('dashboard')"><span class="mnav-icon">⊞</span>Inicio</button>
+  <button class="mobile-nav-item" id="mn-talleres" onclick="showPage('talleres')"><span class="mnav-icon">◈</span>Talleres</button>
+  <button class="mobile-nav-item" id="mn-reportes" onclick="showPage('reportes')"><span class="mnav-icon">≡</span>Reportes</button>
+  <button class="mobile-nav-item" id="mn-config" onclick="showPage('config')"><span class="mnav-icon">⚙</span>Config</button>
+</nav>
+
+<script>
+// Este script corre SIEMPRE, independientemente de los imports del módulo
+setTimeout(function() {
+  var ls = document.getElementById('loading-screen');
+  if(ls && ls.style.display !== 'none') {
+    document.getElementById('loading-spinner').style.display = 'none';
+    document.getElementById('loading-msg').style.color = '#e74c3c';
+    document.getElementById('loading-msg').style.maxWidth = '80vw';
+    document.getElementById('loading-msg').style.textAlign = 'center';
+    document.getElementById('loading-msg').textContent = 'Error: no se pudo cargar Firebase. Verificá tu conexión a internet y recargá la página.';
+  }
+}, 8000);
+window.addEventListener('error', function(e) {
+  var ls = document.getElementById('loading-screen');
+  if(ls && ls.style.display !== 'none') {
+    document.getElementById('loading-spinner').style.display = 'none';
+    document.getElementById('loading-msg').style.color = '#e74c3c';
+    document.getElementById('loading-msg').textContent = 'JS Error: ' + e.message;
+  }
+});
+</script>
+
+<script type="module">
+let initializeApp, getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc;
+
+function mostrarErrorCarga(msg) {
+  document.getElementById('loading-spinner').style.display = 'none';
+  document.getElementById('loading-msg').style.color = '#e74c3c';
+  document.getElementById('loading-msg').style.maxWidth = '80vw';
+  document.getElementById('loading-msg').style.textAlign = 'center';
+  document.getElementById('loading-msg').textContent = msg;
+}
+
+try {
+  ({ initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js"));
+} catch(e) { mostrarErrorCarga('Error cargando firebase-app: ' + e.message); throw e; }
+
+try {
+  ({ getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js"));
+} catch(e) { mostrarErrorCarga('Error cargando firebase-firestore: ' + e.message); throw e; }
+
+const app = initializeApp({
+  apiKey: "AIzaSyBncZeVxFtetHZHb0bj9n6xwqBj8N9rGaw",
+  authDomain: "talleres-aa63d.firebaseapp.com",
+  projectId: "talleres-aa63d",
+  storageBucket: "talleres-aa63d.firebasestorage.app",
+  messagingSenderId: "314917816261",
+  appId: "1:314917816261:web:dfdf28139e5fb0f6bf2dac"
+});
+const db = getFirestore(app);
+
+function mostrarErrorPantalla(msg) {
+  document.getElementById('loading-spinner').style.display = 'none';
+  document.getElementById('loading-msg').style.color = '#e74c3c';
+  document.getElementById('loading-msg').style.fontSize = '12px';
+  document.getElementById('loading-msg').style.maxWidth = '80vw';
+  document.getElementById('loading-msg').style.textAlign = 'center';
+  document.getElementById('loading-msg').textContent = msg;
+}
+
+window.addEventListener('error', e => mostrarErrorPantalla('JS Error: ' + e.message));
+window.addEventListener('unhandledrejection', e => mostrarErrorPantalla('Error: ' + (e.reason?.message || e.reason)));
+
+setTimeout(() => {
+  if(document.getElementById('loading-screen').style.display !== 'none') {
+    mostrarErrorPantalla('Tiempo de espera agotado. Verificá tu conexión a internet.');
+  }
+}, 10000);
+
+let talleres = [];
+let configTemas = [];
+let configLugares = [];
+
+function setSyncStatus(s) {
+  document.getElementById('sync-dot').className = 'sync-dot ' + s;
+  document.getElementById('sync-text').textContent = s==='online'?'Sincronizado':s==='syncing'?'Guardando...':s==='error'?'Error de conexión':'Conectando...';
+}
+
+onSnapshot(collection(db,'talleres'), snap => {
+  talleres = snap.docs.map(d=>({...d.data(),id:d.id}))
+    .sort((a,b)=>b.fecha.localeCompare(a.fecha));
+  setSyncStatus('online');
+  document.getElementById('loading-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+  actualizarReloj();
+  renderDashboard();
+  poblarFiltros();
+  if(document.getElementById('page-talleres').classList.contains('active')) renderTalleres();
+}, err => {
+  setSyncStatus('error');
+  document.getElementById('loading-spinner').style.display = 'none';
+  document.getElementById('loading-msg').style.color = '#e74c3c';
+  document.getElementById('loading-msg').textContent = 'Error de conexión: ' + err.code;
+});
+
+onSnapshot(collection(db,'config_temas'), snap => {
+  configTemas = snap.docs.map(d=>({...d.data(),id:d.id})).sort((a,b)=>a.nombre.localeCompare(b.nombre));
+  if(document.getElementById('page-config').classList.contains('active')) renderConfig();
+});
+
+onSnapshot(collection(db,'config_lugares'), snap => {
+  configLugares = snap.docs.map(d=>({...d.data(),id:d.id})).sort((a,b)=>a.nombre.localeCompare(b.nombre));
+  if(document.getElementById('page-config').classList.contains('active')) renderConfig();
+});
+
+async function fbSet(datos) {
+  setSyncStatus('syncing');
+  try { await setDoc(doc(db,'talleres',datos.id), datos); setSyncStatus('online'); }
+  catch(e) { setSyncStatus('error'); showToast('Error al guardar','error'); throw e; }
+}
+async function fbDel(id) {
+  setSyncStatus('syncing');
+  try { await deleteDoc(doc(db,'talleres',id)); setSyncStatus('online'); }
+  catch(e) { setSyncStatus('error'); showToast('Error al eliminar','error'); throw e; }
+}
+
+const hoy = () => { const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); };
+const fFecha = f => { if(!f)return'—'; const[y,m,d]=f.split('-'); return`${d}/${m}/${y}`; };
+const getT = id => talleres.find(t=>t.id===id);
+const lugaresUnicos = () => [...new Set(talleres.map(t=>t.lugar).filter(Boolean))].sort();
+
+function actualizarReloj() {
+  document.getElementById('dash-fecha').textContent = new Date().toLocaleDateString('es-UY',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  document.getElementById('clock').textContent = new Date().toLocaleTimeString('es-UY',{hour:'2-digit',minute:'2-digit'});
+}
+setInterval(actualizarReloj, 60000);
+
+function showToast(msg, tipo='') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'toast show '+tipo;
+  setTimeout(()=>t.className='toast', 2800);
+}
+
+window.showPage = id => {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>{if(n.getAttribute('onclick')?.includes(id))n.classList.add('active');});
+  document.querySelectorAll('.mobile-nav-item').forEach(n=>n.classList.remove('active'));
+  const mn = document.getElementById('mn-'+id);
+  if(mn) mn.classList.add('active');
+  if(id==='dashboard') renderDashboard();
+  if(id==='talleres')  renderTalleres();
+  if(id==='reportes')  initReportes();
+  if(id==='config')    renderConfig();
+  window.scrollTo(0,0);
+};
+
+function poblarFiltros() {
+  const lugares = configLugares.map(l=>l.nombre);
+  const anios = [...new Set(talleres.map(t=>t.fecha?.slice(0,4)).filter(Boolean))].sort((a,b)=>b-a);
+
+  const fL = document.getElementById('filtro-lugar');
+  const vL = fL.value;
+  fL.innerHTML = '<option value="">Todos los lugares</option>' + lugares.map(l=>`<option value="${l}"${l===vL?' selected':''}>${l}</option>`).join('');
+
+  const fA = document.getElementById('filtro-anio');
+  const vA = fA.value;
+  fA.innerHTML = '<option value="">Todos los años</option>' + anios.map(a=>`<option value="${a}"${a===vA?' selected':''}>${a}</option>`).join('');
+
+  const rL = document.getElementById('rep-lugar');
+  const vRL = rL.value;
+  rL.innerHTML = '<option value="">Todos</option>' + lugares.map(l=>`<option value="${l}"${l===vRL?' selected':''}>${l}</option>`).join('');
+}
+
+// DASHBOARD
+function renderDashboard() {
+  const totalAsist = talleres.reduce((s,t)=>s+(parseInt(t.asistentes)||0),0);
+  const nLugares = lugaresUnicos().length;
+  const promedio = talleres.length ? Math.round(totalAsist/talleres.length) : 0;
+  document.getElementById('st-talleres').textContent = talleres.length;
+  document.getElementById('st-asistentes').textContent = totalAsist;
+  document.getElementById('st-lugares').textContent = nLugares;
+  document.getElementById('st-promedio').textContent = promedio;
+  actualizarReloj();
+
+  const recientes = talleres.slice(0,8);
+  document.getElementById('dash-tabla').innerHTML = recientes.length
+    ? recientes.map(t=>`<tr>
+        <td style="font-family:'DM Mono',monospace;font-size:12px;white-space:nowrap;">${fFecha(t.fecha)}</td>
+        <td style="font-weight:500;">${t.lugar}</td>
+        <td style="color:var(--text2);">${t.tema}</td>
+        <td style="text-align:center;font-family:'DM Mono',monospace;color:var(--accent);font-weight:600;">${t.asistentes||0}</td>
+      </tr>`).join('')
+    : `<tr><td colspan="4" style="text-align:center;color:var(--text3);padding:32px;">No hay talleres aún. ¡Agregá el primero!</td></tr>`;
+}
+
+// TALLERES
+window.renderTalleres = function() {
+  const q = document.getElementById('search-talleres').value.toLowerCase();
+  const lugar = document.getElementById('filtro-lugar').value;
+  const anio  = document.getElementById('filtro-anio').value;
+
+  const lista = talleres.filter(t => {
+    if(q && !t.lugar?.toLowerCase().includes(q) && !t.tema?.toLowerCase().includes(q)) return false;
+    if(lugar && t.lugar !== lugar) return false;
+    if(anio && t.fecha?.slice(0,4) !== anio) return false;
+    return true;
+  });
+
+  document.getElementById('talleres-sub').textContent = `${lista.length} taller${lista.length!==1?'es':''}`;
+  const wrap  = document.getElementById('tabla-talleres-wrap');
+  const empty = document.getElementById('talleres-empty');
+
+  if(!lista.length) { wrap.style.display='none'; empty.style.display=''; return; }
+  wrap.style.display=''; empty.style.display='none';
+
+  const esMobile = window.innerWidth <= 768;
+  if(esMobile) {
+    wrap.querySelector('thead').style.display = 'none';
+    document.getElementById('tabla-talleres').innerHTML = lista.map(t=>`
+      <tr><td style="padding:12px 16px;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <div style="font-weight:500;">${t.lugar}</div>
+            <div style="font-size:12px;color:var(--text2);margin-top:3px;">${t.tema}</div>
+            <div style="font-size:12px;color:var(--text3);margin-top:3px;display:flex;gap:10px;">
+              <span style="font-family:'DM Mono',monospace;">${fFecha(t.fecha)}</span>
+              <span style="color:var(--accent);font-weight:500;">${t.asistentes||0} asistentes</span>
+            </div>
+            ${t.obs?`<div style="font-size:12px;color:var(--text3);margin-top:4px;">${t.obs}</div>`:''}
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-sm" onclick="abrirModalTaller('${t.id}')">Editar</button>
+          </div>
+        </div>
+      </td></tr>`).join('');
+  } else {
+    wrap.querySelector('thead').style.display = '';
+    document.getElementById('tabla-talleres').innerHTML = lista.map(t=>`
+      <tr>
+        <td style="font-family:'DM Mono',monospace;font-size:12px;white-space:nowrap;">${fFecha(t.fecha)}</td>
+        <td style="font-weight:500;">${t.lugar}</td>
+        <td>${t.tema}</td>
+        <td style="text-align:center;font-family:'DM Mono',monospace;color:var(--accent);font-weight:600;">${t.asistentes||0}</td>
+        <td style="color:var(--text3);font-size:12px;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${t.obs||'—'}</td>
+        <td><div class="actions">
+          <button class="btn btn-sm" onclick="abrirModalTaller('${t.id}')">Editar</button>
+        </div></td>
+      </tr>`).join('');
+  }
+};
+
+// MODAL
+window.abrirModalTaller = (id) => {
+  const t = id ? getT(id) : null;
+  document.getElementById('edit-id').value = id||'';
+  document.getElementById('modal-taller-title').textContent = t ? 'Editar taller' : 'Nuevo taller';
+  document.getElementById('inp-fecha').value = t?.fecha || hoy();
+  document.getElementById('inp-asistentes').value = t?.asistentes ?? '';
+  document.getElementById('inp-obs').value = t?.obs || '';
+
+  const selLugar = document.getElementById('inp-lugar');
+  selLugar.innerHTML = '<option value="">— Seleccioná un lugar —</option>' +
+    configLugares.map(l=>`<option value="${l.nombre}"${l.nombre===t?.lugar?' selected':''}>${l.nombre}</option>`).join('');
+
+  const selTema = document.getElementById('inp-tema');
+  selTema.innerHTML = '<option value="">— Seleccioná un taller —</option>' +
+    configTemas.map(tm=>`<option value="${tm.nombre}"${tm.nombre===t?.tema?' selected':''}>${tm.nombre}</option>`).join('');
+
+  document.getElementById('btn-eliminar-taller').style.display = t ? '' : 'none';
+  document.getElementById('modal-taller').classList.add('open');
+  setTimeout(()=>document.getElementById('inp-fecha').focus(), 100);
+};
+
+window.eliminarTallerDesdeModal = async () => {
+  const id = document.getElementById('edit-id').value;
+  if(!id) return;
+  if(!await confirmar('¿Eliminar este taller?')) return;
+  cerrarModal('modal-taller');
+  await fbDel(id);
+  showToast('Taller eliminado','');
+};
+
+window.guardarTaller = async () => {
+  const fecha = document.getElementById('inp-fecha').value;
+  const lugar = document.getElementById('inp-lugar').value;
+  const tema  = document.getElementById('inp-tema').value;
+  if(!fecha||!lugar||!tema){ showToast('Completá fecha, lugar y tema','error'); return; }
+  const btn = document.getElementById('btn-guardar');
+  btn.disabled=true; btn.textContent='Guardando...';
+  const id = document.getElementById('edit-id').value || Date.now().toString();
+  const esNuevo = !document.getElementById('edit-id').value;
+
+  try {
+    await fbSet({ id, fecha, lugar, tema,
+      asistentes: parseInt(document.getElementById('inp-asistentes').value)||0,
+      obs: document.getElementById('inp-obs').value.trim()
+    });
+    showToast(esNuevo?'Taller agregado ✓':'Taller actualizado ✓','success');
+    cerrarModal('modal-taller');
+  } finally { btn.disabled=false; btn.textContent='Guardar'; }
+};
+
+window.eliminarTaller = async id => {
+  if(!await confirmar('¿Eliminar este taller?')) return;
+  await fbDel(id);
+  showToast('Taller eliminado','');
+};
+
+window.cerrarModal = id => document.getElementById(id).classList.remove('open');
+
+function confirmar(msg) {
+  return new Promise(resolve => {
+    document.getElementById('confirm-msg').textContent = msg;
+    document.getElementById('modal-confirm').classList.add('open');
+    const ok = document.getElementById('confirm-ok-btn');
+    const cancel = document.getElementById('confirm-cancel-btn');
+    const cleanup = (val) => {
+      document.getElementById('modal-confirm').classList.remove('open');
+      ok.replaceWith(ok.cloneNode(true));
+      cancel.replaceWith(cancel.cloneNode(true));
+      resolve(val);
+    };
+    document.getElementById('confirm-ok-btn').onclick = () => cleanup(true);
+    document.getElementById('confirm-cancel-btn').onclick = () => cleanup(false);
+  });
+}
+document.querySelectorAll('.modal-overlay').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)cerrarModal(m.id);}));
+
+// REPORTES
+function initReportes() {
+  poblarFiltros();
+  document.getElementById('rep-resumen').innerHTML = '';
+  document.getElementById('rep-tabla-wrap').style.display = 'none';
+  document.getElementById('rep-empty').style.display = '';
+  document.getElementById('rep-empty-text').textContent = 'Seleccioná los filtros y presioná Filtrar para ver los resultados';
+}
+
+window.renderReportes = () => {
+  const desde = document.getElementById('rep-desde').value;
+  const hasta  = document.getElementById('rep-hasta').value;
+  const lugar  = document.getElementById('rep-lugar').value;
+
+  const rows = talleres.filter(t => {
+    if(desde && t.fecha < desde) return false;
+    if(hasta && t.fecha > hasta) return false;
+    if(lugar && t.lugar !== lugar) return false;
+    return true;
+  });
+
+  const totalAsist = rows.reduce((s,t)=>s+(parseInt(t.asistentes)||0),0);
+  document.getElementById('rep-resumen').innerHTML = `
+    <div class="stat-card stat-blue"><div class="stat-label">Talleres</div><div class="stat-value">${rows.length}</div></div>
+    <div class="stat-card stat-green"><div class="stat-label">Asistentes</div><div class="stat-value" style="font-size:22px;">${totalAsist}</div></div>
+    <div class="stat-card"><div class="stat-label">Promedio</div><div class="stat-value" style="font-size:22px;">${rows.length?Math.round(totalAsist/rows.length):0}</div><div class="stat-sub">asist./taller</div></div>
+  `;
+
+  const wrap  = document.getElementById('rep-tabla-wrap');
+  const empty = document.getElementById('rep-empty');
+
+  if(!rows.length) {
+    wrap.style.display='none'; empty.style.display='';
+    document.getElementById('rep-empty-text').textContent = 'Sin resultados para los filtros aplicados';
+    return;
+  }
+  wrap.style.display=''; empty.style.display='none';
+
+  document.getElementById('rep-tabla').innerHTML = rows.map(t=>`
+    <tr>
+      <td style="font-family:'DM Mono',monospace;font-size:12px;white-space:nowrap;">${fFecha(t.fecha)}</td>
+      <td style="font-weight:500;">${t.lugar}</td>
+      <td>${t.tema}</td>
+      <td style="text-align:center;font-family:'DM Mono',monospace;color:var(--accent);font-weight:600;">${t.asistentes||0}</td>
+      <td style="color:var(--text3);font-size:12px;">${t.obs||'—'}</td>
+    </tr>`).join('');
+};
+
+window.limpiarReportes = () => {
+  ['rep-desde','rep-hasta'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('rep-lugar').value='';
+  initReportes();
+};
+
+// EXPORTAR EXCEL
+window.exportarExcel = async () => {
+  const desde = document.getElementById('rep-desde').value;
+  const hasta  = document.getElementById('rep-hasta').value;
+  const lugar  = document.getElementById('rep-lugar').value;
+
+  const rows = talleres.filter(t => {
+    if(desde && t.fecha < desde) return false;
+    if(hasta && t.fecha > hasta) return false;
+    if(lugar && t.lugar !== lugar) return false;
+    return true;
+  });
+
+  if(!rows.length){ showToast('No hay datos para exportar','error'); return; }
+
+  const fF = f => { if(!f)return''; const[y,m,d]=f.split('-'); return`${d}/${m}/${y}`; };
+
+  function applyStyle(cell, {bg,fg,bold,sz,align,valign,border}) {
+    if(bg) cell.fill = {type:'pattern',pattern:'solid',fgColor:{argb:'FF'+bg}};
+    if(fg||bold||sz) cell.font = {color:{argb:'FF'+(fg||'000000')},bold:!!bold,size:sz||12};
+    cell.alignment = {horizontal:align||'left',vertical:valign||'middle'};
+    if(border) cell.border = {top:{style:'thin'},left:{style:'thin'},bottom:{style:'thin'},right:{style:'thin'}};
+  }
+  const S = {
+    titulo: {bg:'222222',fg:'FFFFFF',bold:true, sz:15,align:'center',valign:'middle'},
+    header: {bg:'444444',fg:'FFFFFF',bold:true, sz:13,align:'center',valign:'middle',border:true},
+    norm:   {bg:'FFFFFF',fg:'000000',bold:false,sz:12,align:'left',  valign:'middle',border:true},
+    normC:  {bg:'FFFFFF',fg:'000000',bold:false,sz:12,align:'center',valign:'middle',border:true},
+    alt:    {bg:'F5F5F5',fg:'000000',bold:false,sz:12,align:'left',  valign:'middle',border:true},
+    altC:   {bg:'F5F5F5',fg:'000000',bold:false,sz:12,align:'center',valign:'middle',border:true},
+    total:  {bg:'DDDDDD',fg:'000000',bold:true, sz:13,align:'left',  valign:'middle',border:true},
+    totalC: {bg:'DDDDDD',fg:'000000',bold:true, sz:13,align:'center',valign:'middle',border:true},
+  };
+
+  const wb = new ExcelJS.Workbook();
+  const ws = wb.addWorksheet('Talleres');
+  let r = 1;
+
+  ws.mergeCells(r,1,r,5);
+  const tit = ws.getCell(r,1); tit.value='REPORTE DE TALLERES'; ws.getRow(r).height=30;
+  applyStyle(tit,S.titulo); r++;
+
+  ws.getRow(r).height=20;
+  ['Fecha','Lugar','Tema','Asistentes','Observaciones'].forEach((h,i)=>{ const c=ws.getCell(r,i+1); c.value=h; applyStyle(c,S.header); }); r++;
+
+  rows.forEach((t,ri) => {
+    const e = ri%2===0;
+    ws.getRow(r).height=18;
+    ws.getCell(r,1).value=fF(t.fecha);      applyStyle(ws.getCell(r,1),e?S.normC:S.altC);
+    ws.getCell(r,2).value=t.lugar||'';      applyStyle(ws.getCell(r,2),e?S.norm:S.alt);
+    ws.getCell(r,3).value=t.tema||'';       applyStyle(ws.getCell(r,3),e?S.norm:S.alt);
+    ws.getCell(r,4).value=t.asistentes||0;  applyStyle(ws.getCell(r,4),e?S.normC:S.altC);
+    ws.getCell(r,5).value=t.obs||'';        applyStyle(ws.getCell(r,5),e?S.norm:S.alt);
+    r++;
+  });
+
+  const totalAsist = rows.reduce((s,t)=>s+(t.asistentes||0),0);
+  ws.getRow(r).height=22;
+  ws.mergeCells(r,1,r,3); ws.getCell(r,1).value='TOTAL'; applyStyle(ws.getCell(r,1),S.total);
+  ws.getCell(r,4).value=totalAsist; applyStyle(ws.getCell(r,4),S.totalC);
+  applyStyle(ws.getCell(r,5),S.total);
+
+  ws.columns.forEach(col => {
+    let max=8;
+    col.eachCell({includeEmpty:false},cell=>{ if(!cell.isMerged&&cell.value!=null){ const l=String(cell.value).length; if(l>max)max=l; } });
+    col.width=Math.min(max+4,50);
+  });
+
+  const buf=await wb.xlsx.writeBuffer();
+  const blob=new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url; a.download='talleres_'+new Date().toISOString().split('T')[0]+'.xlsx';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+  showToast('Exportado correctamente','success');
+};
+
+// CONFIGURACIÓN
+function renderConfig() {
+  const renderLista = (items, contenedor, tipo) => {
+    const div = document.getElementById(contenedor);
+    if(!items.length) {
+      div.innerHTML = `<div class="empty-state" style="padding:32px;"><div class="empty-icon" style="font-size:28px;">◇</div><div class="empty-text">No hay ítems. Agregá el primero.</div></div>`;
+      return;
+    }
+    div.innerHTML = items.map(item=>`
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 18px;border-bottom:1px solid var(--border);">
+        <span style="font-size:13px;">${item.nombre}</span>
+        <button class="btn btn-sm" onclick="abrirModalConfigItem('${tipo}','${item.id}')">Editar</button>
+      </div>`).join('');
+  };
+  renderLista(configTemas,   'lista-config-temas',   'tema');
+  renderLista(configLugares, 'lista-config-lugares', 'lugar');
+}
+
+window.abrirModalConfigItem = (tipo, id = null) => {
+  const lista = tipo === 'tema' ? configTemas : configLugares;
+  const item  = id ? lista.find(i => i.id === id) : null;
+  document.getElementById('config-item-tipo').value  = tipo;
+  document.getElementById('config-item-id').value    = id || '';
+  document.getElementById('modal-config-title').textContent = item
+    ? (tipo === 'tema' ? 'Editar taller / charla' : 'Editar lugar')
+    : (tipo === 'tema' ? 'Nuevo taller / charla'  : 'Nuevo lugar');
+  document.getElementById('config-item-label').textContent = tipo === 'tema' ? 'Nombre del taller / charla *' : 'Nombre del lugar *';
+  document.getElementById('config-item-nombre').value = item?.nombre || '';
+  document.getElementById('config-item-nombre').placeholder = tipo === 'tema' ? 'Ej: Presupuesto personal...' : 'Ej: Centro Cívico...';
+  document.getElementById('btn-eliminar-config').style.display = item ? '' : 'none';
+  document.getElementById('modal-config-item').classList.add('open');
+  setTimeout(()=>document.getElementById('config-item-nombre').focus(), 100);
+};
+
+window.guardarConfigItem = async () => {
+  const tipo   = document.getElementById('config-item-tipo').value;
+  const nombre = document.getElementById('config-item-nombre').value.trim();
+  if(!nombre){ showToast('Ingresá un nombre','error'); return; }
+  const col = tipo === 'tema' ? 'config_temas' : 'config_lugares';
+  const btn = document.getElementById('btn-guardar-config');
+  btn.disabled=true; btn.textContent='Guardando...';
+  try {
+    const id = document.getElementById('config-item-id').value || Date.now().toString();
+    await setDoc(doc(db, col, id), {id, nombre});
+    showToast('Guardado ✓','success');
+    cerrarModal('modal-config-item');
+  } catch(e) { showToast('Error al guardar','error'); }
+  finally { btn.disabled=false; btn.textContent='Guardar'; }
+};
+
+window.eliminarConfigItemDesdeModal = async () => {
+  const tipo = document.getElementById('config-item-tipo').value;
+  const id   = document.getElementById('config-item-id').value;
+  if(!id) return;
+  if(!await confirmar('¿Eliminar este ítem?')) return;
+  cerrarModal('modal-config-item');
+  const col = tipo === 'tema' ? 'config_temas' : 'config_lugares';
+  try {
+    await deleteDoc(doc(db, col, id));
+    showToast('Eliminado','');
+  } catch(e) { showToast('Error al eliminar','error'); }
+};
+</script>
+</body>
+</html>
