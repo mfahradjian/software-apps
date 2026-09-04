@@ -425,11 +425,6 @@ function telFormato(t) {
   const limpio = t.trim();
   return limpio.startsWith("+") ? limpio : `+598 ${limpio}`;
 }
-// Dígitos del teléfono sin contar el prefijo de país 598 (con o sin "+").
-function digitosTelefono(t) {
-  const soloDigitos = (t || "").replace(/\D/g, "");
-  return soloDigitos.startsWith("598") ? soloDigitos.slice(3) : soloDigitos;
-}
 // Fecha de hoy en la hora local del dispositivo (no UTC), para que coincida con el huso de Uruguay.
 function hoyISO() {
   const d = new Date();
@@ -599,11 +594,6 @@ function abrirModalPaciente(pacienteExistente, onGuardado) {
     e.preventDefault();
     const data = Object.fromEntries(new FormData(e.target));
     const errEl = $("#paciente-error", backdrop);
-    if (digitosTelefono(data.telefono).length !== 8) {
-      errEl.textContent = "El teléfono debe tener 8 dígitos, sin contar el +598.";
-      errEl.classList.remove("hidden");
-      return;
-    }
     errEl.classList.add("hidden");
     try {
       if (esEdicion) await actualizarPaciente(p.id, data);
